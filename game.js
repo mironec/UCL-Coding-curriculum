@@ -9,6 +9,11 @@ var drawCycle = 0;
 var thingsToDraw = [];
 var grassPattern1, grassPattern2;
 
+const FOCUS_GAME = 0;
+const FOCUS_SCRIPT_BAR = 1;
+var gameFocus=FOCUS_GAME;
+var scriptBar = "";
+
 var camera = {
 	x: 0.0,
 	y: 0.0
@@ -20,11 +25,37 @@ var startClick = {
 
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
+	
+	if(gameFocus == FOCUS_SCRIPT_BAR && (e.keyCode == 8 || e.keyCode == 46)) {
+		e.preventDefault();
+		
+		onKeyPress(e.keyCode);
+	}
+}, false);
+
+addEventListener("keypress", function (e) {
+	onKeyPress(e.keyCode);
 }, false);
 
 addEventListener("keyup", function (e) {
 	delete keysDown[e.keyCode];
 }, false);
+
+function onKeyPress(keyCode){
+	if(13 == keyCode || 10 == keyCode){
+		if(gameFocus == FOCUS_GAME) {gameFocus=FOCUS_SCRIPT_BAR; scriptBar = "";}
+		else if(gameFocus == FOCUS_SCRIPT_BAR) {
+			gameFocus=FOCUS_GAME;
+			eval(scriptBar);
+		}
+	}
+	
+	if(gameFocus == FOCUS_SCRIPT_BAR && keyCode != 10 && keyCode != 13){
+		if(keyCode == 8) scriptBar=scriptBar.substring(0,scriptBar.length-1);	//Backspace
+		//else if(keyCode == 46) scriptBar=scriptBar.substring(1,scriptBar.length);	//Delete
+		else scriptBar += String.fromCharCode(keyCode);
+	}
+}
 
 addEventListener("mousedown", function (e){
 	onMouseDown(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
@@ -97,8 +128,8 @@ function draw(delta){
 	ctx.save();
 	ctx.translate(camera.x, camera.y);
 	
-	for(x=-canvas.width;x<canvas.width;x+=64){
-		for(y=-canvas.height;y<canvas.height;y+=64){
+	for(x=-canvas.width;x<canvas.width*2;x+=64){
+		for(y=-canvas.height;y<canvas.height*2;y+=64){
 			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
 			if(pseudoRand<0.5 && grassPattern1) ctx.fillStyle = grassPattern1;
 			else if(pseudoRand>=0.5 && grassPattern2) ctx.fillStyle = grassPattern2;
@@ -119,14 +150,20 @@ function draw(delta){
 	ctx.restore();
 	ctx.fillStyle = "#000000";
 	ctx.fillText(drawCycle,10,10);
+	
+	if(gameFocus == FOCUS_SCRIPT_BAR){
+		ctx.fillStyle = "rgba(0,0,0,0.3)";
+		ctx.fillRect(0,canvas.height-18,canvas.width, 18);
+		ctx.fillStyle = "rgba(1,1,1,0.7)";
+		ctx.font="14px Arial";
+		ctx.fillText(scriptBar,5,canvas.height-4);
+	}
+	
 	drawCycle++;
 }
 
 function update(delta){
-	if(38 in keysDown){
-		otherColor = true;
-	}
-	else otherColor = false;
+	
 }
 
 var mainLoop = function(){
