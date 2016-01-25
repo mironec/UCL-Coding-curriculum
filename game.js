@@ -13,6 +13,7 @@ const FOCUS_GAME = 0;
 const FOCUS_SCRIPT_BAR = 1;
 var gameFocus=FOCUS_GAME;
 var scriptBar = "";
+var characters = new CharacterList();
 
 var camera = {
 	x: 0.0,
@@ -154,7 +155,7 @@ function draw(delta){
 	if(gameFocus == FOCUS_SCRIPT_BAR){
 		ctx.fillStyle = "rgba(0,0,0,0.3)";
 		ctx.fillRect(0,canvas.height-18,canvas.width, 18);
-		ctx.fillStyle = "rgba(1,1,1,0.7)";
+		ctx.fillStyle = "rgba(255,255,255,0.7)";
 		ctx.font="14px Arial";
 		ctx.fillText(scriptBar,5,canvas.height-4);
 	}
@@ -163,7 +164,7 @@ function draw(delta){
 }
 
 function update(delta){
-	
+	characters.update(delta);
 }
 
 var mainLoop = function(){
@@ -178,9 +179,21 @@ var mainLoop = function(){
 	requestAnimationFrame(mainLoop);
 }
 
+function getCharacter(name){
+	var retCharacterList = new CharacterList();
+	var func = function(){if(this.name == name) retCharacterList.add(this);}
+	characters.forEach(func);
+	return retCharacterList;
+}
+
+function addCharacter(character){
+	characters.add(character);
+	thingsToDraw.push(character);
+}
+
 var bob = new Character("Bob",0,0);
 bob.loadImage('images/bob.png');
-thingsToDraw.push(bob);
+addCharacter(bob);
 
 lastMainLoopTime = Date.now();
 init();
