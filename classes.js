@@ -1,40 +1,45 @@
-var Character = function(name,x,y){
-	this.init(name,x,y);
-}
-
-Character.prototype.init = function(name,x,y){
-	this.name = name;
-	this.x=x;
-	this.y=y;
-	this.moveX = x;
-	this.moveY = y;
-	this.moveSpeed = 100;
-	this.image = new Image();
+//GameObject Class
+var GameObject = function(x,y){
+	this.x = x;
+	this.y = y;
+	this.image = null;
 	this.imageReady = false;
 }
 
-Character.prototype.loadImage = function(url){
+GameObject.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.translate(this.x,this.y);
+	if(this.imageReady)
+		ctx.drawImage(this.image,0,0);
+	ctx.restore();
+}
+
+GameObject.prototype.loadImage = function(url){
 	var img = new Image();
-	var yolo = this;
+	var parentGameObject = this;
 	img.onload = function(){
-		yolo.image = img;
-		yolo.imageReady = true;
+		parentGameObject.image = img;
+		parentGameObject.imageReady = true;
 	}
 	this.imageReady = false;
 	img.src = url;
 }
 
-Character.prototype.draw = function(ctx){
-	ctx.save();
-	ctx.translate(this.x,this.y);
-	if(this.imageReady)
-		ctx.drawImage(this.image,0,0);
-	else{
-		ctx.fillStyle = "#000000";
-		ctx.fillRect(0,0,10,10);
-	}
-	ctx.restore();
+GameObject.prototype.update = function(delta){}
+
+//Character Class, inherits GameObject
+var Character = function(name,x,y){
+	GameObject.call(this,x,y);
+	
+	this.name = name;
+	this.moveX = x;
+	this.moveY = y;
+	this.moveSpeed = 100;
+	this.image = new Image();
 }
+
+Character.prototype = Object.create(GameObject.prototype);
+Character.prototype.constructor = GameObject;
 
 Character.prototype.moveTo = function(x,y){
 	this.moveX = x;
@@ -53,11 +58,8 @@ Character.prototype.update = function(delta){
 	this.y += realDist/desireDist * desireY;
 }
 
+//CharacterList Class
 var CharacterList = function(arr){
-	this.init(arr);
-}
-
-CharacterList.prototype.init = function(){
 	this.arr = [];
 }
 
