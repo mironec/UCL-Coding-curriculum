@@ -2,6 +2,8 @@
 var GameObject = function(x,y){
 	this.x = x;
 	this.y = y;
+	this.width = 0;
+	this.height = 0;
 	this.image = null;
 	this.imageReady = false;
 }
@@ -25,7 +27,41 @@ GameObject.prototype.loadImage = function(url){
 	img.src = url;
 }
 
+GameObject.prototype.getImageFromRepo = function(name, repo){
+	this.image = repo.getImage(name);
+	this.imageReady = true;
+}
+
 GameObject.prototype.update = function(delta){}
+
+//Tree Class, inherits GameObject
+var Tree = function(x,y,aliveImage,deadImage){
+	GameObject.call(this,x,y);
+	
+	this.width = 40;
+	this.height = 100;
+	this.aliveImage = aliveImage;
+	this.deadImage = deadImage;
+	this.image = this.aliveImage;
+	this.imageReady = true;
+	this.alive = true;
+}
+
+Tree.prototype = Object.create(GameObject.prototype);
+Tree.prototype.constructor = GameObject;
+
+Tree.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.translate(this.x-this.width/2,this.y-this.height/4);
+	if(this.imageReady)
+		ctx.drawImage(this.image,0,0);
+	ctx.restore();
+}
+
+Tree.prototype.fall = function(){
+	this.alive = false;
+	this.image = this.deadImage;
+}
 
 //Character Class, inherits GameObject
 var Character = function(name,x,y){
@@ -34,6 +70,8 @@ var Character = function(name,x,y){
 	this.name = name;
 	this.moveX = x;
 	this.moveY = y;
+	this.width = 64;
+	this.height = 64;
 	this.moveSpeed = 100;
 	this.image = new Image();
 }
@@ -89,4 +127,45 @@ CharacterList.prototype.update = function(delta){
 
 CharacterList.prototype.add = function(character){
 	this.arr.push(character);
+}
+
+//ImageRepository Class
+var ImageRepository = function(){
+	this.repo = new Array();
+	this.imgReady = new Array();
+}
+
+ImageRepository.prototype.loadImage = function(name, url, callback){
+	var img = new Image();
+	var parentRepo = this;
+	img.onload = function(){
+		parentRepo.addImage(name,img,callback);
+	}
+	this.imgReady[name] = false;
+	img.src = url;
+}
+
+ImageRepository.prototype.loadImages = function(names, urls, callback){
+	if(names.length != urls.length) return;
+	var calledBack = 0;
+	var len = names.length;
+	var parentRepo = this;
+	for(i=0;i<len;i++){
+		parentRepo.loadImage(names[i],urls[i],function(){
+			calledBack++;
+			if(calledBack == len && callback !== undefined){
+				callback();
+			}
+		});
+	}
+}
+
+ImageRepository.prototype.addImage = function(name, img, callback){
+	this.repo[name] = img;
+	this.imgReady[name] = true;
+	if(callback !== undefined) callback();
+}
+
+ImageRepository.prototype.getImage = function(name){
+	return (this.imgReady[name]===undefined || this.imgReady[name] == false) ? null : this.repo[name];
 }

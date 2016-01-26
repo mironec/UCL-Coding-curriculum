@@ -14,6 +14,7 @@ const FOCUS_SCRIPT_BAR = 1;
 var gameFocus=FOCUS_GAME;
 var scriptBar = "";
 var characters = new CharacterList();
+var imageRepository = new ImageRepository();
 
 var camera = {
 	x: 0.0,
@@ -103,21 +104,25 @@ function init(){
 			canvas.width = document.body.clientWidth-scrollbarWidth;
 			canvas.height = document.body.clientHeight-scrollbarWidth;
 			
-			var image = new Image();
-			image.onload = function(){
-				grassPattern1 = ctx.createPattern(image, "repeat");
-			}
-			image.src = "images/Grass1.png";
+			imageRepository.loadImages(['bob','grass1','grass2','tree1','stump1'],['images/Bob.png','images/Grass1.png','images/Grass2.png','images/Tree1.png','images/Stump1.png'],
+			function(){postLoad();}  );
 			
-			var image2 = new Image();
-			image2.onload = function(){
-				grassPattern2 = ctx.createPattern(image2, "repeat");
-			}
-			image2.src = "images/Grass2.png";
-			
-			mainLoop();
 		}
 	}
+}
+
+function postLoad(){
+	grassPattern1 = ctx.createPattern(imageRepository.getImage('grass1'), "repeat");
+	grassPattern2 = ctx.createPattern(imageRepository.getImage('grass2'), "repeat");
+	
+	var bob = new Character("Bob",0,0);
+	bob.getImageFromRepo('bob',imageRepository);
+	addCharacter(bob);
+	
+	var tree1 = new Tree(300,0,imageRepository.getImage('tree1'),imageRepository.getImage('stump1'));
+	thingsToDraw.push(tree1);
+	
+	mainLoop();
 }
 
 function draw(delta){
@@ -190,10 +195,6 @@ function addCharacter(character){
 	characters.add(character);
 	thingsToDraw.push(character);
 }
-
-var bob = new Character("Bob",0,0);
-bob.loadImage('images/bob.png');
-addCharacter(bob);
 
 lastMainLoopTime = Date.now();
 init();
