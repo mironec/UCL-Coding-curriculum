@@ -91,6 +91,14 @@ function onMouseMove(x, y, b){
 	startClick.y=y;
 }
 
+window.addEventListener("resize",function(e){resizeCanvas();},false);
+
+function resizeCanvas(){
+	var scrollbarWidth = getScrollbarWidth();
+	canvas.width = document.body.clientWidth-scrollbarWidth;
+	canvas.height = document.body.clientHeight-scrollbarWidth;
+}
+
 function init(){
 	canvas = document.getElementById("gameCanvas");
 	if(canvas==null){
@@ -100,9 +108,7 @@ function init(){
 		ctx = canvas.getContext("2d");
 		if(ctx==null) document.write("Your browser does not support HTML5 Canvas.");
 		else {
-			var scrollbarWidth = getScrollbarWidth();
-			canvas.width = document.body.clientWidth-scrollbarWidth;
-			canvas.height = document.body.clientHeight-scrollbarWidth;
+			resizeCanvas();
 			
 			imageRepository.loadImages(['bob','grass1','grass2','tree1','stump1'],['images/Bob.png','images/Grass1.png','images/Grass2.png','images/Tree1.png','images/Stump1.png'],
 			function(){postLoad();}  );
