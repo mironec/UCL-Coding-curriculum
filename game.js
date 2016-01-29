@@ -94,9 +94,8 @@ function onMouseMove(x, y, b){
 window.addEventListener("resize",function(e){resizeCanvas();},false);
 
 function resizeCanvas(){
-	var scrollbarWidth = getScrollbarWidth();
-	canvas.width = document.body.clientWidth-scrollbarWidth;
-	canvas.height = document.body.clientHeight-scrollbarWidth;
+	canvas.width = document.body.clientWidth;
+	canvas.height = document.body.clientHeight;
 }
 
 function init(){
