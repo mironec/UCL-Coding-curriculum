@@ -1,16 +1,20 @@
 var Level = function(ctx, imageRepository){
 	this.keysDown = {};
 	this.mouseButtonsDown = {};
+	
 	this.ctx = ctx;
 	this.thingsToDraw = [];
 	this.grassPattern1 = null;
 	this.grassPattern2 = null;
+	
 	this.FOCUS_GAME = 0;
 	this.FOCUS_SCRIPT_BAR = 1;
 	this.gameFocus = this.FOCUS_GAME;
 	this.scriptBar = "";
+	
 	this.characters = new CharacterList();
 	this.imageRepository = imageRepository;
+	
 	this.camera = {
 		x: 0.0,
 		y: 0.0
@@ -19,6 +23,8 @@ var Level = function(ctx, imageRepository){
 		x: 0.0,
 		y: 0.0
 	}
+	
+	this.allowedFunctions = ["getCharacterByName"];
 }
 
 Level.prototype.start = function(){
@@ -86,8 +92,16 @@ Level.prototype.onKeyPress = function(e){
 }
 
 Level.prototype.executeScipt = function(script){
-	script = "currentLevel." + script;
-	eval(script);
+	var ok = false;
+	for(i=0;i<this.allowedFunctions.length;i++){
+		if(script.startsWith(this.allowedFunctions[i])) ok=true;
+		var pos = script.indexOf(this.allowedFunctions[i]);
+		if(pos!=-1){
+			script = script.substring(0,pos) + "currentLevel." + script.substring(pos);
+		}
+	}
+	if(ok)
+		eval(script);
 }
 
 Level.prototype.onMouseDown = function(x, y, b){
