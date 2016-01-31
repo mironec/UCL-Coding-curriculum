@@ -82,7 +82,31 @@ Character.prototype.constructor = GameObject;
 Character.prototype.moveTo = function(x,y){
 	this.moveX = x;
 	this.moveY = y;
+	/*if(arguments.length == 2){
+		var dx, dy;
+		if(arguments[0].toString().endsWith('r'))
+			dx = this.x + parseFloat(arguments[0].substring(0,arguments[0].length-1));
+		else
+			dx = parseFloat(arguments[0]);
+		
+		if(arguments[1].toString().endsWith('r'))
+			dy = this.y + parseFloat(arguments[1].substring(0,arguments[1].length-1));
+		else
+			dy = parseFloat(arguments[1]);
+		
+		this.moveToAbsolute(dx,dy);
+	}*/
 }
+
+Character.prototype.move = function(rx,ry){
+	this.moveX = this.x + rx;
+	this.moveY = this.y + ry;
+}
+
+/*Character.prototype.moveToAbsolute = function(x,y){
+	this.moveX = x;
+	this.moveY = y;
+}*/
 
 Character.prototype.update = function(delta){
 	var desireX = this.moveX - this.x;
@@ -110,6 +134,12 @@ CharacterList.prototype.forEach = function(f){
 CharacterList.prototype.moveTo = function(x,y){
 	for(i=0;i<this.arr.length;i++){
 		this.arr[i].moveTo(x,y);
+	}
+}
+
+CharacterList.prototype.move = function(x,y){
+	for(i=0;i<this.arr.length;i++){
+		this.arr[i].move(x,y);
 	}
 }
 
