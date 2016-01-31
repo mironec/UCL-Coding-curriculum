@@ -111,7 +111,7 @@ Level.prototype.draw = function(delta){
 	var c = this.ctx;
 	
 	c.fillStyle = "#000000";
-	c.fillRect(0,0,1000,1000);
+	c.fillRect(0,0,canvas.width,canvas.height);
 	c.save();
 	c.translate(this.camera.x, this.camera.y);
 	
