@@ -74,7 +74,7 @@ Level.prototype.onKeyPress = function(e){
 		if(this.gameFocus == this.FOCUS_GAME) {this.gameFocus=this.FOCUS_SCRIPT_BAR; this.scriptBar = "";}
 		else if(this.gameFocus == this.FOCUS_SCRIPT_BAR) {
 			this.gameFocus=this.FOCUS_GAME;
-			eval(this.scriptBar);
+			this.executeScipt(this.scriptBar);
 		}
 	}
 	
@@ -85,6 +85,11 @@ Level.prototype.onKeyPress = function(e){
 	}
 }
 
+Level.prototype.executeScipt = function(script){
+	script = "currentLevel." + script;
+	eval(script);
+}
+
 Level.prototype.onMouseDown = function(x, y, b){
 	this.startClick.x = x;
 	this.startClick.y = y;
@@ -92,15 +97,15 @@ Level.prototype.onMouseDown = function(x, y, b){
 }
 
 Level.prototype.onMouseUp = function(x, y, b){
-	this.camera.x += x-this.startClick.x;
-	this.camera.y += y-this.startClick.y;
+	this.camera.x += this.startClick.x-x;
+	this.camera.y += this.startClick.y-y;
 	delete this.mouseButtonsDown[b];
 }
 
 Level.prototype.onMouseMove = function(x, y, b){
 	if(!(b in this.mouseButtonsDown)) return;
-	this.camera.x += x-this.startClick.x;
-	this.camera.y += y-this.startClick.y;
+	this.camera.x += this.startClick.x-x;
+	this.camera.y += this.startClick.y-y;
 	this.startClick.x=x;
 	this.startClick.y=y;
 }
@@ -113,10 +118,11 @@ Level.prototype.draw = function(delta){
 	c.fillStyle = "#000000";
 	c.fillRect(0,0,canvas.width,canvas.height);
 	c.save();
-	c.translate(this.camera.x, this.camera.y);
+	c.translate(Math.round(canvas.width/2), Math.round(canvas.height/2));
+	c.translate(-this.camera.x, -this.camera.y);
 	
-	for(x=-1280;x<1280*2;x+=64){
-		for(y=-1280;y<1280*2;y+=64){
+	for(x=-1280;x<1280;x+=64){
+		for(y=-1280;y<1280;y+=64){
 			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
 			if(pseudoRand<0.5 && this.grassPattern1) c.fillStyle = this.grassPattern1;
 			else if(pseudoRand>=0.5 && this.grassPattern2) c.fillStyle = this.grassPattern2;
@@ -128,7 +134,7 @@ Level.prototype.draw = function(delta){
 	
 	
 	c.save();
-	c.translate(canvas.width/2,canvas.height/2);
+	c.translate(0,0);
 	for(i=0;i<this.thingsToDraw.length;i++){
 		this.thingsToDraw[i].draw(c);
 	}
@@ -149,7 +155,7 @@ Level.prototype.update = function(delta){
 	this.characters.update(delta);
 }
 
-Level.prototype.getCharacter = function(name){
+Level.prototype.getCharacterByName = function(name){
 	var retCharacterList = new CharacterList();
 	var func = function(){if(this.name == name) retCharacterList.add(this);}
 	this.characters.forEach(func);
