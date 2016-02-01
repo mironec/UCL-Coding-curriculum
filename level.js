@@ -63,9 +63,10 @@ Level.prototype.start = function(){
 }
 
 Level.prototype.onKeyDown = function(e){
-	this.keysDown[e.keyCode] = true;
+	var kc = e.key || e.keyCode;
+	this.keysDown[kc] = true;
 	
-	if(this.gameFocus == this.FOCUS_SCRIPT_BAR && (e.keyCode == 8 || e.keyCode == 46)) {
+	if(this.gameFocus == this.FOCUS_SCRIPT_BAR && (kc == 8 || kc == 46 || kc == "Backspace" || kc == "Delete")) {
 		e.preventDefault();
 		
 		this.onKeyPress(e);
@@ -73,12 +74,12 @@ Level.prototype.onKeyDown = function(e){
 }
 
 Level.prototype.onKeyUp = function(e){
-	delete this.keysDown[e.keyCode];
+	this.keysDown[e.key || e.keyCode] = false;
 }
 
 Level.prototype.onKeyPress = function(e){
-	//alert(e.keyCode);
-	if(13 == e.keyCode || 10 == e.keyCode){
+	var kc = e.key || e.keyCode;
+	if(13 == kc || 10 == kc || "Enter" == kc){
 		if(this.gameFocus == this.FOCUS_GAME) {this.gameFocus=this.FOCUS_SCRIPT_BAR; this.scriptBar = "";}
 		else if(this.gameFocus == this.FOCUS_SCRIPT_BAR) {
 			this.gameFocus=this.FOCUS_GAME;
@@ -86,10 +87,9 @@ Level.prototype.onKeyPress = function(e){
 		}
 	}
 	
-	if(this.gameFocus == this.FOCUS_SCRIPT_BAR && e.keyCode != 10 && e.keyCode != 13){
-		if(e.keyCode == 8) this.scriptBar=this.scriptBar.substring(0,this.scriptBar.length-1);	//Backspace
-		//else if(keyCode == 46) scriptBar=scriptBar.substring(1,scriptBar.length);	//Delete
-		else this.scriptBar += String.fromCharCode(e.keyCode);
+	if(this.gameFocus == this.FOCUS_SCRIPT_BAR && kc != 10 && kc != 13 && kc != "Enter"){
+		if(kc == 8 || kc == "Backspace") this.scriptBar=this.scriptBar.substring(0,this.scriptBar.length-1);
+		else this.scriptBar += ((typeof kc === "string") ? kc : String.fromCharCode(kc));
 	}
 }
 
