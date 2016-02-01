@@ -4,6 +4,7 @@ var Level = function(ctx, imageRepository){
 	
 	this.ctx = ctx;
 	this.thingsToDraw = [];
+	this.gameObjects = [];
 	this.grassPattern1 = null;
 	this.grassPattern2 = null;
 	
@@ -24,7 +25,7 @@ var Level = function(ctx, imageRepository){
 		y: 0.0
 	}
 	
-	this.allowedFunctions = ["getCharacterByName"];
+	this.allowedFunctions = ["getCharacterByName","getNearestTreeTo"];
 }
 
 Level.prototype.start = function(){
@@ -58,6 +59,7 @@ Level.prototype.start = function(){
 	
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
 	this.thingsToDraw.push(tree1);
+	this.gameObjects.push(tree1);
 }
 
 Level.prototype.onKeyDown = function(e){
@@ -95,10 +97,7 @@ Level.prototype.executeScipt = function(script){
 	var ok = false;
 	for(i=0;i<this.allowedFunctions.length;i++){
 		if(script.startsWith(this.allowedFunctions[i])) ok=true;
-		var pos = script.indexOf(this.allowedFunctions[i]);
-		if(pos!=-1){
-			script = script.substring(0,pos) + "currentLevel." + script.substring(pos);
-		}
+		script = script.replace(new RegExp(this.allowedFunctions[i],"g"), "currentLevel."+this.allowedFunctions[i]);
 	}
 	if(ok)
 		eval(script);
@@ -179,4 +178,23 @@ Level.prototype.getCharacterByName = function(name){
 Level.prototype.addCharacter = function(character){
 	this.characters.add(character);
 	this.thingsToDraw.push(character);
+	this.gameObjects.push(character);
+}
+
+Level.prototype.getNearestTreeTo = function(character){
+	if(character instanceof CharacterList) character=character.arr[0];
+	var closestDist = 1000*1000*1000;
+	var closestTree = null;
+	
+	for(i=0;i<this.gameObjects.length;i++){
+		if(this.gameObjects[i] instanceof Tree && this.gameObjects[i].isAlive() ){
+			var thisDist = this.gameObjects[i].distanceTo(character);
+			if(thisDist < closestDist){
+				closestDist = thisDist;
+				closestTree = this.gameObjects[i];
+			}
+		}
+	}
+	
+	return closestTree;
 }

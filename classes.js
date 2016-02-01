@@ -34,6 +34,12 @@ GameObject.prototype.getImageFromRepo = function(name, repo){
 
 GameObject.prototype.update = function(delta){}
 
+GameObject.prototype.distanceTo = function(gO){
+	var disX = this.x-gO.x;
+	var disY = this.y-gO.y;
+	return Math.sqrt(disX*disX + disY*disY);
+}
+
 //Tree Class, inherits GameObject
 var Tree = function(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
@@ -63,13 +69,16 @@ Tree.prototype.fall = function(){
 	this.image = this.deadImage;
 }
 
+Tree.prototype.isAlive = function(){
+	return this.alive;
+}
+
 //Character Class, inherits GameObject
 var Character = function(name,x,y){
 	GameObject.call(this,x,y);
 	
 	this.name = name;
-	this.moveX = x;
-	this.moveY = y;
+	this.orders = [];
 	this.width = 64;
 	this.height = 64;
 	this.moveSpeed = 100;
@@ -80,8 +89,7 @@ Character.prototype = Object.create(GameObject.prototype);
 Character.prototype.constructor = GameObject;
 
 Character.prototype.moveTo = function(x,y){
-	this.moveX = x;
-	this.moveY = y;
+	this.orders.push(new Order("move",{x: x, y: y}));
 	/*if(arguments.length == 2){
 		var dx, dy;
 		if(arguments[0].toString().endsWith('r'))
@@ -99,8 +107,13 @@ Character.prototype.moveTo = function(x,y){
 }
 
 Character.prototype.move = function(rx,ry){
-	this.moveX = this.x + rx;
-	this.moveY = this.y + ry;
+	var tx = this.x; var ty = this.y;
+	this.orders.push(new Order("move",{x: tx+rx, y: ty+ry}));
+}
+
+Character.prototype.chopTree = function(tree){
+	this.orders.push(new Order("move",{x: tree.x, y: tree.y}));
+	this.orders.push(new Order("chop",{tree: tree}));
 }
 
 /*Character.prototype.moveToAbsolute = function(x,y){
@@ -109,15 +122,45 @@ Character.prototype.move = function(rx,ry){
 }*/
 
 Character.prototype.update = function(delta){
-	var desireX = this.moveX - this.x;
-	var desireY = this.moveY - this.y;
-	
-	var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-	if(desireDist == 0) return;
-	var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
-	
-	this.x += realDist/desireDist * desireX;
-	this.y += realDist/desireDist * desireY;
+	if(this.orders.length == 0) return;
+	else{
+		var curOrder = this.orders[0];
+		
+		switch(curOrder.getName()){
+			case "move":
+				var moveX = curOrder.getData().x;
+				var moveY = curOrder.getData().y;
+				var desireX = moveX - this.x;
+				var desireY = moveY - this.y;
+				
+				var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
+				if(desireDist == 0) {this.orders.shift(); return;}
+				var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
+				
+				this.x += realDist/desireDist * desireX;
+				this.y += realDist/desireDist * desireY;
+				break;
+			case "chop":
+				var tTree = curOrder.getData().tree;
+				tTree.fall();
+				this.orders.shift();
+				break;
+		}
+	}
+}
+
+//Order Class
+var Order = function(name, data){
+	this.name = name;
+	this.data = data;
+}
+
+Order.prototype.getName = function(){
+	return this.name;
+}
+
+Order.prototype.getData = function(){
+	return this.data;
 }
 
 //CharacterList Class
