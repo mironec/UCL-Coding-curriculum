@@ -5,8 +5,6 @@ var Level = function(ctx, imageRepository){
 	this.ctx = ctx;
 	this.thingsToDraw = [];
 	this.gameObjects = [];
-	this.grassPattern1 = null;
-	this.grassPattern2 = null;
 	
 	this.FOCUS_GAME = 0;
 	this.FOCUS_SCRIPT_BAR = 1;
@@ -15,6 +13,7 @@ var Level = function(ctx, imageRepository){
 	
 	this.characters = new CharacterList();
 	this.imageRepository = imageRepository;
+	this.map = new Map(imageRepository);
 	
 	this.camera = {
 		x: 0.0,
@@ -52,8 +51,19 @@ Level.prototype.start = function(){
 		parentLevel.onMouseUp(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 	}, false);
 	
-	this.grassPattern1 = this.ctx.createPattern(this.imageRepository.getImage('grass1'), "repeat");
-	this.grassPattern2 = this.ctx.createPattern(this.imageRepository.getImage('grass2'), "repeat");
+	var seed = 3824723.4358;
+	var pseudoRand = seed;
+	var b = [];
+	for(i=0;i<40;i++){
+		var a = [];
+		for(j=0;j<40;j++){
+			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
+			a.push({type: "grass", variation: (pseudoRand>0.5 ? 2 : 1)});
+		}
+		b.push(a);
+	}
+	this.map.setPosition(-1280, -1280);
+	this.map.parseMap(b);
 	
 	var bob = new Character("Bob",0,0,this);
 	bob.getImageFromRepo('bob',this.imageRepository);
@@ -126,8 +136,6 @@ Level.prototype.onMouseMove = function(x, y, b){
 }
 
 Level.prototype.draw = function(delta){
-	var seed = 3824723.4358;
-	var pseudoRand = seed;
 	var c = this.ctx;
 	
 	c.fillStyle = "#000000";
@@ -136,17 +144,7 @@ Level.prototype.draw = function(delta){
 	c.translate(Math.round(canvas.width/2), Math.round(canvas.height/2));
 	c.translate(-this.camera.x, -this.camera.y);
 	
-	for(x=-1280;x<1280;x+=64){
-		for(y=-1280;y<1280;y+=64){
-			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
-			if(pseudoRand<0.5 && this.grassPattern1) c.fillStyle = this.grassPattern1;
-			else if(pseudoRand>=0.5 && this.grassPattern2) c.fillStyle = this.grassPattern2;
-			else c.fillStyle = "#009900";
-			c.fillRect(x,y,64,64);
-		}
-	}
-	
-	
+	this.map.draw(ctx);
 	
 	c.save();
 	c.translate(0,0);

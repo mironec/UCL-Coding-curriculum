@@ -48,6 +48,69 @@ var GameFunction = function(name,helpingNamespace){
 GameFunction.prototype.getName = function(){ return this.name; }
 GameFunction.prototype.getHelpingNamespace = function(){ return this.helpingNamespace; }
 
+var Tile = function(type, variation){
+	this.type = type;
+	this.variation = variation || 1;
+}
+
+Tile.types = [];
+Tile.types.push({type: "grass", passable: true});
+
+Tile.prototype.isPassable = function(){
+	for(i=0;i<Tile.types.length;i++){
+		if(this.type == Tile.types[i].type) return Tile.types[i].passable;
+	}
+	return false;
+}
+
+var Map = function(imageRepository){
+	this.beginX = 0;
+	this.beginY = 0;
+	this.numTilesX = 0;
+	this.numTilesY = 0;
+	this.tileWidth = 64;
+	this.tileHeight = 64;
+	this.imageRepository = imageRepository;
+	this.tiles = [];
+}
+
+Map.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.translate(this.beginX, this.beginY);
+	
+	for(i=0;i<this.tiles.length;i++){
+		for(j=0;j<this.tiles[i].length;j++){
+			ctx.drawImage(this.imageRepository.getImage(this.tiles[i][j].type + this.tiles[i][j].variation), i*this.tileWidth, j*this.tileHeight);
+		}
+	}
+	
+	ctx.restore();
+}
+
+Map.prototype.ensureSize = function(width, height){
+	this.numTilesX = width || this.numTilesX;
+	this.numTilesY = height || this.numTilesY;
+}
+
+Map.prototype.setPosition = function(x, y){
+	this.beginX = x;
+	this.beginY = y;
+}
+
+Map.prototype.parseTile = function(data,x,y){
+	if(this.tiles[x] === undefined) this.tiles[x] = [];
+	this.tiles[x][y]=new Tile(data.type, data.variation);
+}
+
+Map.prototype.parseMap = function(a){
+	for(i=0;i<a.length;i++){
+		for(j=0;j<a[i].length;j++){
+			this.parseTile(a[i][j],i,j);
+		}
+	}
+	this.ensureSize(a.length,a[0].length);
+}
+
 //Tree Class, inherits GameObject
 var Tree = function(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
@@ -268,5 +331,5 @@ ImageRepository.prototype.addImage = function(name, img, callback){
 }
 
 ImageRepository.prototype.getImage = function(name){
-	return (this.imgReady[name]===undefined || this.imgReady[name] == false) ? null : this.repo[name];
+	return (this.imgReady[name]===undefined || this.imgReady[name] === false) ? null : this.repo[name];
 }
