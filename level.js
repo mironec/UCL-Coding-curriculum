@@ -25,7 +25,9 @@ var Level = function(ctx, imageRepository){
 		y: 0.0
 	}
 	
-	this.allowedFunctions = ["getCharacterByName","getNearestTreeTo"];
+	this.allowedFunctions = [];
+	this.allowedFunctions.push(new GameFunction("getCharacterByName","currentLevel."));
+	this.allowedFunctions.push(new GameFunction("getNearestTree",""));
 }
 
 Level.prototype.start = function(){
@@ -53,7 +55,7 @@ Level.prototype.start = function(){
 	this.grassPattern1 = this.ctx.createPattern(this.imageRepository.getImage('grass1'), "repeat");
 	this.grassPattern2 = this.ctx.createPattern(this.imageRepository.getImage('grass2'), "repeat");
 	
-	var bob = new Character("Bob",0,0);
+	var bob = new Character("Bob",0,0,this);
 	bob.getImageFromRepo('bob',this.imageRepository);
 	this.addCharacter(bob);
 	
@@ -96,8 +98,8 @@ Level.prototype.onKeyPress = function(e){
 Level.prototype.executeScipt = function(script){
 	var ok = false;
 	for(i=0;i<this.allowedFunctions.length;i++){
-		if(script.startsWith(this.allowedFunctions[i])) ok=true;
-		script = script.replace(new RegExp(this.allowedFunctions[i],"g"), "currentLevel."+this.allowedFunctions[i]);
+		if(script.startsWith(this.allowedFunctions[i].getName())) ok=true;
+		script = script.replace(new RegExp(this.allowedFunctions[i].getName(),"g"), this.allowedFunctions[i].getHelpingNamespace()+this.allowedFunctions[i].getName());
 	}
 	if(ok)
 		eval(script);

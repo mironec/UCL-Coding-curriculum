@@ -40,6 +40,14 @@ GameObject.prototype.distanceTo = function(gO){
 	return Math.sqrt(disX*disX + disY*disY);
 }
 
+var GameFunction = function(name,helpingNamespace){
+	this.name = name;
+	this.helpingNamespace = helpingNamespace;
+}
+
+GameFunction.prototype.getName = function(){ return this.name; }
+GameFunction.prototype.getHelpingNamespace = function(){ return this.helpingNamespace; }
+
 //Tree Class, inherits GameObject
 var Tree = function(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
@@ -74,9 +82,10 @@ Tree.prototype.isAlive = function(){
 }
 
 //Character Class, inherits GameObject
-var Character = function(name,x,y){
+var Character = function(name,x,y,parentLevel){
 	GameObject.call(this,x,y);
 	
+	this.parentLevel = parentLevel;
 	this.name = name;
 	this.orders = [];
 	this.width = 64;
@@ -90,20 +99,6 @@ Character.prototype.constructor = GameObject;
 
 Character.prototype.moveTo = function(x,y){
 	this.orders.push(new Order("move",{x: x, y: y}));
-	/*if(arguments.length == 2){
-		var dx, dy;
-		if(arguments[0].toString().endsWith('r'))
-			dx = this.x + parseFloat(arguments[0].substring(0,arguments[0].length-1));
-		else
-			dx = parseFloat(arguments[0]);
-		
-		if(arguments[1].toString().endsWith('r'))
-			dy = this.y + parseFloat(arguments[1].substring(0,arguments[1].length-1));
-		else
-			dy = parseFloat(arguments[1]);
-		
-		this.moveToAbsolute(dx,dy);
-	}*/
 }
 
 Character.prototype.move = function(rx,ry){
@@ -116,10 +111,27 @@ Character.prototype.chopTree = function(tree){
 	this.orders.push(new Order("chop",{tree: tree}));
 }
 
-/*Character.prototype.moveToAbsolute = function(x,y){
-	this.moveX = x;
-	this.moveY = y;
-}*/
+Character.prototype.getNearestTree = function(){
+	var closestDist = 1000*1000*1000;
+	var closestTree = null;
+	var gO = this.parentLevel.gameObjects;
+	
+	for(i=0;i<gO.length;i++){
+		if(gO[i] instanceof Tree && gO[i].isAlive() ){
+			var thisDist = gO[i].distanceTo(this);
+			if(thisDist < closestDist){
+				closestDist = thisDist;
+				closestTree = gO[i];
+			}
+		}
+	}
+	
+	return closestTree;
+}
+
+Character.prototype.chopNearestTree = function(){
+	this.chopTree(this.getNearestTree());
+}
 
 Character.prototype.update = function(delta){
 	if(this.orders.length == 0) return;
@@ -171,6 +183,22 @@ var CharacterList = function(arr){
 CharacterList.prototype.forEach = function(f){
 	for(i=0;i<this.arr.length;i++){
 		f.call(this.arr[i]);
+	}
+}
+
+CharacterList.prototype.chopTree = function(tree){
+	for(i=0;i<this.arr.length;i++){
+		this.arr[i].chopTree(tree);
+	}
+}
+
+CharacterList.prototype.getNearestTree = function(){
+	return this.arr[0].getNearestTree();
+}
+
+CharacterList.prototype.chopNearestTree = function(){
+	for(i=0;i<this.arr.length;i++){
+		this.arr[i].chopNearestTree();
 	}
 }
 

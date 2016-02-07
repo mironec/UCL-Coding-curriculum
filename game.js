@@ -86,7 +86,6 @@ function draw(delta){
 	
 	ctx.fillStyle = "#000000";
 	ctx.fillText(drawCycle,10,10);
-	drawCycle++;
 }
 
 function update(delta){
@@ -96,7 +95,10 @@ function update(delta){
 var mainLoop = function(){
 	var now = Date.now();
 	var delta = now - lastMainLoopTime;
+	if(delta>250){delta=250;}
 
+	drawCycle = Math.round(1000/delta);
+	
 	update(delta);
 	draw(delta);
 
