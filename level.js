@@ -8,8 +8,10 @@ var Level = function(ctx, imageRepository){
 	
 	this.FOCUS_GAME = 0;
 	this.FOCUS_SCRIPT_BAR = 1;
+	this.FOCUS_TUTORIAL = 2;
 	this.gameFocus = this.FOCUS_GAME;
 	this.scriptBar = "";
+	this.tutorialText = "";
 	
 	this.characters = new CharacterList();
 	this.imageRepository = imageRepository;
@@ -27,6 +29,15 @@ var Level = function(ctx, imageRepository){
 	this.allowedFunctions = [];
 	this.allowedFunctions.push(new GameFunction("getCharacterByName","currentLevel."));
 	this.allowedFunctions.push(new GameFunction("getNearestTree",""));
+}
+
+Level.prototype.setCtx = function(ctx){
+	this.ctx = ctx;
+}
+
+Level.prototype.setImageRepository = function(imageRepo){
+	this.imageRepository = imageRepo;
+	this.map.imageRepository = imageRepo;
 }
 
 Level.prototype.start = function(){
@@ -51,6 +62,10 @@ Level.prototype.start = function(){
 		parentLevel.onMouseUp(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 	}, false);
 	
+	this.afterStart();
+}
+
+Level.prototype.afterStart = function(){
 	var seed = 3824723.4358;
 	var pseudoRand = seed;
 	var b = [];
@@ -62,6 +77,7 @@ Level.prototype.start = function(){
 		}
 		b.push(a);
 	}
+	
 	this.map.setPosition(-1280, -1280);
 	this.map.parseMap(b);
 	
@@ -96,6 +112,9 @@ Level.prototype.onKeyPress = function(e){
 		else if(this.gameFocus == this.FOCUS_SCRIPT_BAR) {
 			this.gameFocus=this.FOCUS_GAME;
 			this.executeScipt(this.scriptBar);
+		}
+		else if(this.gameFocus == this.FOCUS_TUTORIAL) {
+			this.gameFocus = this.FOCUS_GAME;
 		}
 	}
 	
@@ -162,11 +181,22 @@ Level.prototype.draw = function(delta){
 		c.font="14px Arial";
 		c.fillText(this.scriptBar,5,canvas.height-4);
 	}
+	if(this.gameFocus == this.FOCUS_TUTORIAL){
+		c.fillStyle = "rgba(0,0,0,0.3)";
+		c.fillRect(canvas.width/2 - 200, 10, 400, 200);
+		
+		c.fillStyle = "rgba(255,255,255,0.7)";
+		c.font="14px Arial";
+		c.fillText(this.tutorialText,canvas.width/2-180,30);
+	}
 }
 
 Level.prototype.update = function(delta){
 	this.characters.update(delta);
+	this.afterUpdate(delta);
 }
+
+Level.prototype.afterUpdate = function(delta){}
 
 Level.prototype.getCharacterByName = function(name){
 	var retCharacterList = new CharacterList();

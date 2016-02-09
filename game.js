@@ -75,7 +75,10 @@ function init(){
 }
 
 function postLoad(){
-	currentLevel = new Level(ctx, imageRepository);
+	//currentLevel = new Level(ctx, imageRepository);
+	level1.setCtx(ctx);
+	level1.setImageRepository(imageRepository);
+	currentLevel = level1;
 	currentLevel.start();
 	
 	mainLoop();
