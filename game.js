@@ -88,6 +88,7 @@ function draw(delta){
 	currentLevel.draw();
 	
 	ctx.fillStyle = "#000000";
+	ctx.font = "12px Arial";
 	ctx.fillText(drawCycle,10,10);
 }
 

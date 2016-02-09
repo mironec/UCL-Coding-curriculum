@@ -154,6 +154,8 @@ var Character = function(name,x,y,parentLevel){
 	this.width = 64;
 	this.height = 64;
 	this.moveSpeed = 100;
+	this.sayText = "";
+	this.sayTime = 0;
 	this.image = new Image();
 }
 
@@ -196,7 +198,16 @@ Character.prototype.chopNearestTree = function(){
 	this.chopTree(this.getNearestTree());
 }
 
+Character.prototype.say = function(s){
+	this.sayText = s;
+	this.sayTime = 5000;
+}
+
 Character.prototype.update = function(delta){
+	if(this.sayTime > 0){
+		this.sayTime -= delta;
+	}
+	
 	if(this.orders.length == 0) return;
 	else{
 		var curOrder = this.orders[0];
@@ -222,6 +233,19 @@ Character.prototype.update = function(delta){
 				break;
 		}
 	}
+}
+
+Character.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.translate(this.x,this.y);
+	if(this.imageReady)
+		ctx.drawImage(this.image,0,0);
+	if(this.sayTime > 0){
+		ctx.font = "14px Arial";
+		ctx.fillStyle = "#DDDDDD";
+		ctx.fillText(this.sayText, 0, 0);
+	}
+	ctx.restore();
 }
 
 //Order Class
@@ -274,6 +298,12 @@ CharacterList.prototype.moveTo = function(x,y){
 CharacterList.prototype.move = function(x,y){
 	for(i=0;i<this.arr.length;i++){
 		this.arr[i].move(x,y);
+	}
+}
+
+CharacterList.prototype.say = function(s){
+	for(i=0;i<this.arr.length;i++){
+		this.arr[i].say(s);
 	}
 }
 
@@ -332,4 +362,52 @@ ImageRepository.prototype.addImage = function(name, img, callback){
 
 ImageRepository.prototype.getImage = function(name){
 	return (this.imgReady[name]===undefined || this.imgReady[name] === false) ? null : this.repo[name];
+}
+
+var Spellbook = function(){
+	this.tabs = [];
+	this.tabs.push(new SpellbookTab());
+	this.pointerTab = 0;
+	this.show = false;
+}
+
+Spellbook.prototype.moveCursorRight = function(){
+	this.tabs[this.pointerTab].moveCursorRight();
+}
+
+Spellbook.prototype.moveCursorLeft = function(){
+	this.tabs[this.pointerTab].moveCursorLeft();
+}
+
+Spellbook.prototype.draw = function(ctx){
+	ctx.fillStyle = "rgba(0,0,0,0.3)";
+	ctx.fillRect(0,canvas.height-200,canvas.width,180);
+}
+
+Spellbook.prototype.isHidden = function(){
+	return !this.show;
+}
+
+var SpellbookTab = function(){
+	this.lines = [];
+	this.pointerX = 0;
+	this.pointerY = 0;
+}
+
+SpellbookTab.prototype.moveCursorRight = function(){
+	this.pointerX++;
+	if(this.pointerX>this.lines[this.pointerY].length){
+		this.pointerY++;
+		if(this.pointerY > this.lines.length){this.pointerY--; this.pointerX--;}
+		else{this.pointerX = 0;}
+	}
+}
+
+SpellbookTab.prototype.moveCursorLeft = function(){
+	this.pointerX--;
+	if(this.pointerX<0){
+		this.pointerY--;
+		if(this.pointerY < 0){this.pointerY++; this.pointerX++;}
+		else{this.pointerX = this.lines[this.pointerY].length;}
+	}
 }

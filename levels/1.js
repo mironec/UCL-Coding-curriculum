@@ -8,7 +8,7 @@ level1.afterStart = function(){
 		var a = [];
 		for(j=0;j<40;j++){
 			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
-			a.push({type: "grass", variation: (pseudoRand>0.5 ? 2 : 1)});
+			a.push({type: "grass", variation: Math.floor(pseudoRand*2 + 1) });
 		}
 		b.push(a);
 	}
@@ -24,16 +24,37 @@ level1.afterStart = function(){
 	this.thingsToDraw.push(tree1);
 	this.gameObjects.push(tree1);
 	
-	this.gameFocus = this.FOCUS_TUTORIAL;
-	this.tutorialText = "Welcome to the game! Go 300 pixels south.";
-	this.done = 0;
+	//this.showTutorial("Welcome to the game! Go 300 pixels south.", true);
+	this.done = 3;
 }
 
 level1.afterUpdate = function(delta){
 	var bob = this.getCharacterByName("Bob").arr[0];
-	if(bob.x == 0 && bob.y == 300 && this.done == 0){
-		this.gameFocus = this.FOCUS_TUTORIAL;
-		this.tutorialText = "Good job!";
+	if(this.done == 0 && bob.x == 0 && bob.y == 300){
+		this.showTutorial("Good job!", false);
 		this.done = 1;
+	}
+	
+	if(this.done == 1 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("You can also do calculations! Try writing say(3+5).", true);
+		this.done = 2;
+	}
+	
+	if(this.done == 2 && bob.sayText == 8){
+		this.showTutorial("Great!", false);
+		this.done = 3;
+	}
+	
+	if(this.done == 3 && this.gameFocus != this.FOCUS_TUTORIAL){
+		var i = Math.floor(Math.random()*100000);
+		var o = i*Math.floor(Math.random()*100000);
+		this.resultThing = o/i;
+		this.showTutorial("You could do that in your head, but what about "+o+"/"+i+"?", true);
+		this.done = 4;
+	}
+	
+	if(this.done == 4 && bob.sayText == this.resultThing){
+		this.showTutorial("Good job...", false);
+		this.done = 5;
 	}
 }
