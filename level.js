@@ -9,6 +9,7 @@ var Level = function(ctx, imageRepository){
 	this.FOCUS_GAME = 0;
 	this.FOCUS_SCRIPT_BAR = 1;
 	this.FOCUS_TUTORIAL = 2;
+	this.FOCUS_SPELLBOOK = 3;
 	this.gameFocus = this.FOCUS_GAME;
 	this.scriptBar = "";
 	this.scriptPointer = 0;
@@ -103,6 +104,13 @@ Level.prototype.onKeyDown = function(e){
 		
 		this.onKeyPress(e);
 	}
+	
+	if(this.gameFocus == this.FOCUS_SPELLBOOK) this.spellbook.keyDown(kc);
+	if(this.gameFocus == this.FOCUS_SPELLBOOK && (kc == 8 || kc == 46 || kc == "Backspace" || kc == "Delete")){
+		e.preventDefault();
+		
+		this.onKeyPress(e);
+	}
 }
 
 Level.prototype.onKeyUp = function(e){
@@ -131,9 +139,12 @@ Level.prototype.onKeyPress = function(e){
 		else if(this.gameFocus == this.FOCUS_TUTORIAL) {
 			this.gameFocus = this.FOCUS_GAME;
 		}
+		else if(this.gameFocus == this.FOCUS_SPELLBOOK){
+			this.spellbook.keyPressed(kc);
+		}
 	}
 	
-	if(this.gameFocus == this.FOCUS_SCRIPT_BAR && kc != 10 && kc != 13 && kc != "Enter"){
+	else if(this.gameFocus == this.FOCUS_SCRIPT_BAR && kc != 10 && kc != 13 && kc != "Enter"){
 		if(kc == 8 || kc == "Backspace") {
 			this.scriptBar = this.scriptBar.substring(0,this.scriptPointer-1) + this.scriptBar.substring(this.scriptPointer);
 			this.scriptPointer--;
@@ -143,6 +154,10 @@ Level.prototype.onKeyPress = function(e){
 			//this.scriptBar += ((typeof kc === "string") ? kc : String.fromCharCode(kc));
 			this.scriptPointer++;
 		}
+	}
+	
+	else if(this.gameFocus == this.FOCUS_SPELLBOOK){
+		this.spellbook.keyPressed(kc);
 	}
 }
 
@@ -214,8 +229,11 @@ Level.prototype.draw = function(delta){
 		c.font="14px Arial";
 		c.fillText(this.tutorialText,canvas.width/2-180,30);
 	}
-	if(!this.spellbook.isHidden()){
+	if(this.gameFocus == this.FOCUS_SPELLBOOK || !this.spellbook.isHidden()){
+		c.save();
+		c.translate(0,canvas.height-200);
 		this.spellbook.draw(c);
+		c.restore();
 	}
 }
 
@@ -243,6 +261,11 @@ Level.prototype.showTutorial = function(s, persist){
 	if(!persist) this.gameFocus = this.FOCUS_TUTORIAL;
 	this.tutorialText = s;
 	this.persistTutorial = persist;
+}
+
+Level.prototype.showSpellbook = function(){
+	this.spellbook.show = true;
+	this.gameFocus = this.FOCUS_SPELLBOOK;
 }
 
 Level.prototype.getNearestTreeTo = function(character){

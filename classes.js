@@ -379,9 +379,24 @@ Spellbook.prototype.moveCursorLeft = function(){
 	this.tabs[this.pointerTab].moveCursorLeft();
 }
 
+Spellbook.prototype.keyDown = function(kc){
+	if(kc == 37){	//Left arrow key
+		this.moveCursorLeft();
+	}
+	if(kc == 39){	//Right arrow key
+		this.moveCursorRight();
+	}
+}
+
+Spellbook.prototype.keyPressed = function(kc){
+	this.tabs[this.pointerTab].keyPressed(kc);
+}
+
 Spellbook.prototype.draw = function(ctx){
 	ctx.fillStyle = "rgba(0,0,0,0.3)";
-	ctx.fillRect(0,canvas.height-200,canvas.width,180);
+	ctx.fillRect(0,0,canvas.width,180);
+	
+	this.tabs[this.pointerTab].draw(ctx);
 }
 
 Spellbook.prototype.isHidden = function(){
@@ -390,6 +405,7 @@ Spellbook.prototype.isHidden = function(){
 
 var SpellbookTab = function(){
 	this.lines = [];
+	this.lines.push("");
 	this.pointerX = 0;
 	this.pointerY = 0;
 }
@@ -398,7 +414,7 @@ SpellbookTab.prototype.moveCursorRight = function(){
 	this.pointerX++;
 	if(this.pointerX>this.lines[this.pointerY].length){
 		this.pointerY++;
-		if(this.pointerY > this.lines.length){this.pointerY--; this.pointerX--;}
+		if(this.pointerY > this.lines.length-1){this.pointerY--; this.pointerX--;}
 		else{this.pointerX = 0;}
 	}
 }
@@ -409,5 +425,50 @@ SpellbookTab.prototype.moveCursorLeft = function(){
 		this.pointerY--;
 		if(this.pointerY < 0){this.pointerY++; this.pointerX++;}
 		else{this.pointerX = this.lines[this.pointerY].length;}
+	}
+}
+
+SpellbookTab.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.fillStyle = "rgba(255,255,255,0.7)";
+	ctx.font = "Arial 14px";
+	for(i=0;i<this.lines.length;i++){
+		ctx.translate(0,15);
+		ctx.fillText(this.lines[i],0,0);
+	}
+	ctx.restore();
+	
+	ctx.fillStyle = "rgba(255,255,255,0.7)";
+	ctx.fillRect(ctx.measureText(this.lines[this.pointerY].substring(0,this.pointerX)).width, this.pointerY*15+1, 1, 14);
+}
+
+SpellbookTab.prototype.keyPressed = function(kc){
+	if(kc == 10 || kc == 13 || kc == "Enter"){
+		var restOfLine;
+		restOfLine = this.lines[this.pointerY].substring(this.pointerX);
+		this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX);
+		if(this.pointerY == this.lines.length - 1) this.lines.push(restOfLine);
+		else this.lines.splice(this.pointerY+1,0,restOfLine);
+		this.pointerY++;
+		this.pointerX = 0;
+	}
+	else if(kc == 8 || kc == "Backspace"){
+		if(this.pointerX > 0){
+			this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX-1) + this.lines[this.pointerY].substring(this.pointerX);
+			this.pointerX--;
+		}
+		else{
+			if(this.pointerY > 0){
+				this.pointerX = this.lines[this.pointerY-1].length;
+				var restOfLine = this.lines[this.pointerY];
+				this.lines.splice(this.pointerY, 1);
+				this.lines[this.pointerY-1]=this.lines[this.pointerY-1] + restOfLine;
+				this.pointerY--;
+			}
+		}
+	}
+	else{
+		this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX) + ((typeof kc === "string") ? kc : String.fromCharCode(kc)) + this.lines[this.pointerY].substring(this.pointerX);
+		this.pointerX++;
 	}
 }
