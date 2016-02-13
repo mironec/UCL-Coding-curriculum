@@ -3,6 +3,8 @@ var Level = function(ctx, imageRepository){
 	this.mouseButtonsDown = {};
 	
 	this.ctx = ctx;
+	this.dummyCanvas=document.createElement('canvas');
+	this.dummyCtx=this.dummyCanvas.getContext('2d');
 	this.thingsToDraw = [];
 	this.gameObjects = [];
 	
@@ -30,6 +32,7 @@ var Level = function(ctx, imageRepository){
 	}
 	
 	this.spellbook = new Spellbook();
+	this.spellbook.hideFunc = this.hideSpellbook;
 	
 	this.allowedFunctions = [];
 	this.allowedFunctions.push(new GameFunction("getCharacterByName","currentLevel."));
@@ -176,6 +179,8 @@ Level.prototype.onMouseDown = function(x, y, b){
 	this.startClick.x = x;
 	this.startClick.y = y;
 	this.mouseButtonsDown[b] = true;
+	
+	if(this.gameFocus == this.FOCUS_SPELLBOOK){this.spellbook.mouseClick(x,y);}
 }
 
 Level.prototype.onMouseUp = function(x, y, b){
@@ -221,13 +226,21 @@ Level.prototype.draw = function(delta){
 		if(Math.floor(Date.now()/250) % 2 == 0)
 			c.fillRect(c.measureText(this.scriptBar.substring(0,this.scriptPointer)).width+5,canvas.height-15,1,14);
 	}
-	if((this.gameFocus == this.FOCUS_TUTORIAL || this.persistTutorial) && this.spellbook.isHidden()){
+	if(this.gameFocus == this.FOCUS_TUTORIAL || this.persistTutorial){
 		c.fillStyle = "rgba(0,0,0,0.3)";
 		c.fillRect(canvas.width/2 - 200, 10, 400, 200);
 		
 		c.fillStyle = "rgba(255,255,255,0.7)";
-		c.font="14px Arial";
-		c.fillText(this.tutorialText,canvas.width/2-180,30);
+		var a = this.tutorialText.split("\n");
+		for(i=0;i<a.length;i++){
+			c.font="14px Arial";
+			if(a[i].startsWith('<c>')){
+				c.font="14px Consolas";
+				c.fillText(a[i].substring(3),canvas.width/2-c.measureText(a[i].substring(3)).width/2,30+i*15);
+			}
+			else 
+				c.fillText(a[i],canvas.width/2-c.measureText(a[i]).width/2,30+i*15);
+		}
 	}
 	if(this.gameFocus == this.FOCUS_SPELLBOOK || !this.spellbook.isHidden()){
 		c.save();
@@ -260,12 +273,45 @@ Level.prototype.addCharacter = function(character){
 Level.prototype.showTutorial = function(s, persist){
 	if(!persist) this.gameFocus = this.FOCUS_TUTORIAL;
 	this.tutorialText = s;
+	
+	var index = 0, newIndex, strAcc = "", strRes = "";
+	while(index < this.tutorialText.length){
+		newIndex = this.tutorialText.indexOf(" ", index);
+		var newLine = this.tutorialText.indexOf("\n", index);
+		if(newIndex == -1) newIndex = this.tutorialText.length;
+		if(newLine != -1 && newLine < newIndex){newIndex = newLine;}
+		var newStr = this.tutorialText.substring(index, newIndex);
+		
+		this.dummyCtx.font = "14px Arial";
+		
+		if(newLine == newIndex){
+			strAcc += newStr;
+			strRes += strAcc + "\n";
+			strAcc = "";
+		}
+		else if(this.dummyCtx.measureText(strAcc).width + this.dummyCtx.measureText(newStr).width > 400){
+			strRes += strAcc.substring(0,strAcc.length-1) + "\n";
+			strAcc = newStr + " ";
+		}
+		else{
+			strAcc += newStr + " ";
+		}
+		index = newIndex+1;
+	}
+	strRes += strAcc;
+	
+	this.tutorialText = strRes;
 	this.persistTutorial = persist;
 }
 
 Level.prototype.showSpellbook = function(){
 	this.spellbook.show = true;
 	this.gameFocus = this.FOCUS_SPELLBOOK;
+}
+
+Level.prototype.hideSpellbook = function(){
+	this.spellbook.show = false;
+	this.gameFocus = this.FOCUS_GAME;
 }
 
 Level.prototype.getNearestTreeTo = function(character){

@@ -166,7 +166,12 @@ Character.prototype.moveTo = function(x,y){
 	this.orders.push(new Order("move",{x: x, y: y}));
 }
 
-Character.prototype.move = function(rx,ry){
+Character.prototype.move = function(rtx,rty){
+	var tx = this.x; var ty = this.y;
+	this.orders.push(new Order("move",{x: rtx*this.parentLevel.map.tileWidth+tx, y: rty*this.parentLevel.map.tileHeight+ty}));
+}
+
+Character.prototype.movePixels = function(rx,ry){
 	var tx = this.x; var ty = this.y;
 	this.orders.push(new Order("move",{x: tx+rx, y: ty+ry}));
 }
@@ -295,6 +300,12 @@ CharacterList.prototype.moveTo = function(x,y){
 	}
 }
 
+CharacterList.prototype.movePixels = function(x,y){
+	for(i=0;i<this.arr.length;i++){
+		this.arr[i].movePixels(x,y);
+	}
+}
+
 CharacterList.prototype.move = function(x,y){
 	for(i=0;i<this.arr.length;i++){
 		this.arr[i].move(x,y);
@@ -369,6 +380,17 @@ var Spellbook = function(){
 	this.tabs.push(new SpellbookTab());
 	this.pointerTab = 0;
 	this.show = false;
+	this.hideFunc;
+}
+
+Spellbook.doneButton = {
+	x: function(){return canvas.width-150;},
+	y: 140,
+	width: 100,
+	height: 30,
+	fontSize: 16,
+	fontFamily: "Consolas",
+	str: "Done"
 }
 
 Spellbook.prototype.moveCursorRight = function(){
@@ -379,12 +401,36 @@ Spellbook.prototype.moveCursorLeft = function(){
 	this.tabs[this.pointerTab].moveCursorLeft();
 }
 
+Spellbook.prototype.moveCursorUp = function(){
+	this.tabs[this.pointerTab].moveCursorUp();
+}
+
+Spellbook.prototype.moveCursorDown = function(){
+	this.tabs[this.pointerTab].moveCursorDown();
+}
+
+Spellbook.prototype.mouseClick = function(x,y){
+	if(x >= Spellbook.doneButton.x && x <= Spellbook.doneButton.x + Spellbook.doneButton.width &&
+	   y >= Spellbook.doneButton.y && y <= Spellbook.doneButton.y + Spellbook.doneButton.height){
+		   this.show = false;
+		   if(this.hideFunc !== undefined){
+			   this.hideFunc();
+		   }
+	   }
+}
+
 Spellbook.prototype.keyDown = function(kc){
 	if(kc == 37){	//Left arrow key
 		this.moveCursorLeft();
 	}
 	if(kc == 39){	//Right arrow key
 		this.moveCursorRight();
+	}
+	if(kc == 38){	//Up arrow key
+		this.moveCursorUp();
+	}
+	if(kc == 40){	//Down arrow key
+		this.moveCursorDown();
 	}
 }
 
@@ -393,10 +439,18 @@ Spellbook.prototype.keyPressed = function(kc){
 }
 
 Spellbook.prototype.draw = function(ctx){
+	ctx.save();
 	ctx.fillStyle = "rgba(0,0,0,0.3)";
 	ctx.fillRect(0,0,canvas.width,180);
 	
 	this.tabs[this.pointerTab].draw(ctx);
+	
+	ctx.fillStyle = "rgba(0,0,0,0.8)";
+	ctx.fillRect(Spellbook.doneButton.x,Spellbook.doneButton.y,Spellbook.doneButton.width,Spellbook.doneButton.height);
+	ctx.fillStyle = "rgba(255,255,255,1)";
+	ctx.font = Spellbook.doneButton.fontSize + "px " + Spellbook.doneButton.fontFamily;
+	ctx.fillText(Spellbook.doneButton.str, Spellbook.doneButton.x+Spellbook.doneButton.width/2-ctx.measureText(Spellbook.doneButton.str).width/2, Spellbook.doneButton.y+Spellbook.doneButton.height/2+Spellbook.doneButton.fontSize/2);
+	ctx.restore();
 }
 
 Spellbook.prototype.isHidden = function(){
@@ -428,10 +482,27 @@ SpellbookTab.prototype.moveCursorLeft = function(){
 	}
 }
 
+SpellbookTab.prototype.moveCursorUp = function(){
+	this.pointerY--;
+	if(this.pointerY<0){
+		this.pointerY++;
+	}
+	if(this.pointerX > this.lines[this.pointerY].length){this.pointerX=this.lines[this.pointerY].length;}
+}
+
+SpellbookTab.prototype.moveCursorDown = function(){
+	this.pointerY++;
+	if(this.pointerY>this.lines.length-1){
+		this.pointerY--;
+	}
+	if(this.pointerX > this.lines[this.pointerY].length){this.pointerX=this.lines[this.pointerY].length;}
+}
+
 SpellbookTab.prototype.draw = function(ctx){
 	ctx.save();
 	ctx.fillStyle = "rgba(255,255,255,0.7)";
-	ctx.font = "Arial 14px";
+	ctx.font = "14px Consolas";
+	ctx.save();
 	for(i=0;i<this.lines.length;i++){
 		ctx.translate(0,15);
 		ctx.fillText(this.lines[i],0,0);
@@ -439,7 +510,8 @@ SpellbookTab.prototype.draw = function(ctx){
 	ctx.restore();
 	
 	ctx.fillStyle = "rgba(255,255,255,0.7)";
-	ctx.fillRect(ctx.measureText(this.lines[this.pointerY].substring(0,this.pointerX)).width, this.pointerY*15+1, 1, 14);
+	ctx.fillRect(ctx.measureText(this.lines[this.pointerY].substring(0,this.pointerX)).width, this.pointerY*15+2, 1, 13);
+	ctx.restore();
 }
 
 SpellbookTab.prototype.keyPressed = function(kc){
@@ -464,6 +536,18 @@ SpellbookTab.prototype.keyPressed = function(kc){
 				this.lines.splice(this.pointerY, 1);
 				this.lines[this.pointerY-1]=this.lines[this.pointerY-1] + restOfLine;
 				this.pointerY--;
+			}
+		}
+	}
+	else if(kc == 46 || kc == "Delete"){
+		if(this.pointerX < this.lines[this.pointerY].length){
+			this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX) + this.lines[this.pointerY].substring(this.pointerX+1);
+		}
+		else{
+			if(this.pointerY < this.lines.length-1){
+				var restOfLine = this.lines[this.pointerY+1];
+				this.lines.splice(this.pointerY+1, 1);
+				this.lines[this.pointerY]=this.lines[this.pointerY] + restOfLine;
 			}
 		}
 	}
