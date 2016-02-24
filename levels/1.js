@@ -58,7 +58,7 @@ level1.afterUpdate = function(delta){
 	
 	if(this.done == 3 && bob.orders.length == 0 && !(bob.x == 0 && bob.y == 0) ){
 		if(bob.x == 0 && bob.y == 3*this.map.tileHeight){
-			this.showTutorial("I'm starting to like the way you move Bob.", false);
+			this.showTutorial("Good job. Now try moving Bob again using move(3, 0).", true);
 			this.done = 4;
 		}
 		else{
@@ -66,6 +66,34 @@ level1.afterUpdate = function(delta){
 			bob.moveTo(0,0);
 			this.done = 2;
 		}
+	}
+	
+	if(this.done == 4 && bob.orders.length == 0 && !(bob.x == 0 && bob.y == 3*this.map.tileHeight) ){
+		if(bob.x == 3*this.map.tileWidth && bob.y == 3*this.map.tileHeight){
+			this.showTutorial("How about move(-3, -3)?", true);
+			this.done = 5;
+		}
+		else{
+			this.showTutorial("That's the wrong way!", false);
+			bob.moveTo(0,3*this.map.tileHeight);
+			this.done = 3;
+		}
+	}
+	
+	if(this.done == 5 && bob.orders.length == 0 && !(bob.x == 3*this.map.tileWidth && bob.y == 3*this.map.tileHeight) ){
+		if(bob.x == 0 && bob.y == 0){
+			this.showTutorial("I'm starting to like the way you move Bob.", false);
+			this.done = 6;
+		}
+		else{
+			this.showTutorial("That's the wrong way!", false);
+			bob.moveTo(3*this.map.tileWidth,3*this.map.tileHeight);
+			this.done = 4;
+		}
+	}
+	
+	if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
+		
 	}
 	
 	/*if(this.done == 2 && bob.sayText == 8){

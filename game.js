@@ -8,6 +8,7 @@ var mouseButtonsDown = {};
 var drawCycle = 0;
 var imageRepository = new ImageRepository();
 var currentLevel;
+var doDraw, doLogic;
 
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
@@ -36,6 +37,15 @@ addEventListener("mousemove", function (e){
 addEventListener("mouseup", function (e){
 	onMouseUp(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 }, false);
+
+window.onfocus = function(e){
+	doDraw = doLogic = true;
+	lastMainLoopTime = Date.now();
+}
+
+window.onblur = function(e){
+	doDraw = doLogic = false;
+}
 
 function onMouseDown(x, y, b){
 	mouseButtonsDown[b] = true;
@@ -81,6 +91,8 @@ function postLoad(){
 	currentLevel = level1;
 	currentLevel.start();
 	
+	doDraw = doLogic = true;
+	
 	mainLoop();
 }
 
@@ -103,8 +115,8 @@ var mainLoop = function(){
 
 	drawCycle = Math.round(1000/delta);
 	
-	update(delta);
-	draw(delta);
+	if(doLogic) update(delta);
+	if(doDraw) draw(delta);
 
 	lastMainLoopTime = now;
 	

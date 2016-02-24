@@ -33,6 +33,7 @@ var Level = function(ctx, imageRepository){
 	
 	this.spellbook = new Spellbook();
 	this.spellbook.hideFunc = this.hideSpellbook;
+	this.spellbook.hideArg = this;
 	
 	this.allowedFunctions = [];
 	this.allowedFunctions.push(new GameFunction("getCharacterByName","currentLevel."));
@@ -103,9 +104,11 @@ Level.prototype.onKeyDown = function(e){
 	this.keysDown[kc] = true;
 	
 	if(this.gameFocus == this.FOCUS_SCRIPT_BAR && (kc == 8 || kc == 46 || kc == "Backspace" || kc == "Delete")) {
+		if(kc == 46 || kc == "Delete") this.scriptBarDeleteAfterCursor();
 		e.preventDefault();
 		
-		this.onKeyPress(e);
+		if(kc != 46 && kc != "Delete")
+			this.onKeyPress(e);
 	}
 	
 	if(this.gameFocus == this.FOCUS_SPELLBOOK) this.spellbook.keyDown(kc);
@@ -131,6 +134,11 @@ Level.prototype.onKeyUp = function(e){
 	}
 }
 
+Level.prototype.scriptBarDeleteAfterCursor = function(){
+	if(this.scriptPointer < this.scriptBar.length)
+		this.scriptBar = this.scriptBar.substring(0,this.scriptPointer) + this.scriptBar.substring(this.scriptPointer+1);
+}
+
 Level.prototype.onKeyPress = function(e){
 	var kc = e.key || e.keyCode;
 	if(13 == kc || 10 == kc || "Enter" == kc){
@@ -151,15 +159,15 @@ Level.prototype.onKeyPress = function(e){
 		if(kc == 8 || kc == "Backspace") {
 			this.scriptBar = this.scriptBar.substring(0,this.scriptPointer-1) + this.scriptBar.substring(this.scriptPointer);
 			this.scriptPointer--;
+			if(this.scriptPointer<0) this.scriptPointer=0;
 		}
 		else{
 			this.scriptBar = this.scriptBar.substring(0,this.scriptPointer) + ((typeof kc === "string") ? kc : String.fromCharCode(kc)) + this.scriptBar.substring(this.scriptPointer);
-			//this.scriptBar += ((typeof kc === "string") ? kc : String.fromCharCode(kc));
 			this.scriptPointer++;
 		}
 	}
 	
-	else if(this.gameFocus == this.FOCUS_SPELLBOOK){
+	else if(this.gameFocus == this.FOCUS_SPELLBOOK && kc != 46){
 		this.spellbook.keyPressed(kc);
 	}
 }
@@ -171,8 +179,15 @@ Level.prototype.executeScipt = function(script){
 		script = script.replace(new RegExp(this.allowedFunctions[i].getName(),"g"), this.allowedFunctions[i].getHelpingNamespace()+this.allowedFunctions[i].getName());
 	}
 	ok = true;
-	if(ok)
-		eval(script);
+	if(ok){
+		var lib = "";
+		for(i=0;i<this.spellbook.tabs.length;i++){
+			lib += this.spellbook.tabs[i].toString();
+		}
+		lib += " ";
+		var greatFunc = new Function(lib+"\n"+script);
+		greatFunc.apply();
+	}
 }
 
 Level.prototype.onMouseDown = function(x, y, b){
@@ -180,7 +195,7 @@ Level.prototype.onMouseDown = function(x, y, b){
 	this.startClick.y = y;
 	this.mouseButtonsDown[b] = true;
 	
-	if(this.gameFocus == this.FOCUS_SPELLBOOK){this.spellbook.mouseClick(x,y);}
+	if(this.gameFocus == this.FOCUS_SPELLBOOK){this.spellbook.mouseClick(x,y-canvas.height+200);}
 }
 
 Level.prototype.onMouseUp = function(x, y, b){
@@ -309,9 +324,9 @@ Level.prototype.showSpellbook = function(){
 	this.gameFocus = this.FOCUS_SPELLBOOK;
 }
 
-Level.prototype.hideSpellbook = function(){
-	this.spellbook.show = false;
-	this.gameFocus = this.FOCUS_GAME;
+Level.prototype.hideSpellbook = function(level){
+	level.spellbook.show = false;
+	level.gameFocus = level.FOCUS_GAME;
 }
 
 Level.prototype.getNearestTreeTo = function(character){

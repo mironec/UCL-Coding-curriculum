@@ -166,14 +166,12 @@ Character.prototype.moveTo = function(x,y){
 	this.orders.push(new Order("move",{x: x, y: y}));
 }
 
-Character.prototype.move = function(rtx,rty){
-	var tx = this.x; var ty = this.y;
-	this.orders.push(new Order("move",{x: rtx*this.parentLevel.map.tileWidth+tx, y: rty*this.parentLevel.map.tileHeight+ty}));
+Character.prototype.move = function(rtx,rty, callback){
+	this.movePixels(rtx*this.parentLevel.map.tileWidth, rty*this.parentLevel.map.tileHeight);
 }
 
-Character.prototype.movePixels = function(rx,ry){
-	var tx = this.x; var ty = this.y;
-	this.orders.push(new Order("move",{x: tx+rx, y: ty+ry}));
+Character.prototype.movePixels = function(rx,ry, callback){
+	this.orders.push(new Order("moveRelative",{x: rx, y: ry, callback: callback}));
 }
 
 Character.prototype.chopTree = function(tree){
@@ -218,6 +216,10 @@ Character.prototype.update = function(delta){
 		var curOrder = this.orders[0];
 		
 		switch(curOrder.getName()){
+			case "moveRelative":
+				curOrder.getData().x += this.x;
+				curOrder.getData().y += this.y;
+				curOrder.setName("move");
 			case "move":
 				var moveX = curOrder.getData().x;
 				var moveY = curOrder.getData().y;
@@ -225,7 +227,7 @@ Character.prototype.update = function(delta){
 				var desireY = moveY - this.y;
 				
 				var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-				if(desireDist == 0) {this.orders.shift(); return;}
+				if(desireDist == 0) {if(curOrder.getData().callback !== undefined) callback(); this.orders.shift(); return;}
 				var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
 				
 				this.x += realDist/desireDist * desireX;
@@ -263,6 +265,10 @@ Order.prototype.getName = function(){
 	return this.name;
 }
 
+Order.prototype.setName = function(name){
+	this.name = name;
+}
+
 Order.prototype.getData = function(){
 	return this.data;
 }
@@ -294,20 +300,23 @@ CharacterList.prototype.chopNearestTree = function(){
 	}
 }
 
-CharacterList.prototype.moveTo = function(x,y){
+CharacterList.prototype.moveTo = function(x,y, callback){
 	for(i=0;i<this.arr.length;i++){
+		if(callback !== undefined) this.arr[i].moveTo(x,y,callback);
 		this.arr[i].moveTo(x,y);
 	}
 }
 
-CharacterList.prototype.movePixels = function(x,y){
+CharacterList.prototype.movePixels = function(x,y, callback){
 	for(i=0;i<this.arr.length;i++){
+		if(callback !== undefined) this.arr[i].movePixels(x,y,callback);
 		this.arr[i].movePixels(x,y);
 	}
 }
 
-CharacterList.prototype.move = function(x,y){
+CharacterList.prototype.move = function(x,y, callback){
 	for(i=0;i<this.arr.length;i++){
+		if(callback !== undefined) this.arr[i].move(x,y,callback);
 		this.arr[i].move(x,y);
 	}
 }
@@ -381,16 +390,17 @@ var Spellbook = function(){
 	this.pointerTab = 0;
 	this.show = false;
 	this.hideFunc;
+	this.hideArg;
 }
 
 Spellbook.doneButton = {
-	x: function(){return canvas.width-150;},
-	y: 140,
-	width: 100,
-	height: 30,
+	getX: function(){return canvas.width-150;},
+	getY: function(){return 140;},
+	getWidth: function(){return 100;},
+	getHeight: function(){return 30;},
 	fontSize: 16,
 	fontFamily: "Consolas",
-	str: "Done"
+	getStr: function(){return "Done";}
 }
 
 Spellbook.prototype.moveCursorRight = function(){
@@ -410,11 +420,11 @@ Spellbook.prototype.moveCursorDown = function(){
 }
 
 Spellbook.prototype.mouseClick = function(x,y){
-	if(x >= Spellbook.doneButton.x && x <= Spellbook.doneButton.x + Spellbook.doneButton.width &&
-	   y >= Spellbook.doneButton.y && y <= Spellbook.doneButton.y + Spellbook.doneButton.height){
+	if(x >= Spellbook.doneButton.getX() && x <= Spellbook.doneButton.getX() + Spellbook.doneButton.getWidth() &&
+	   y >= Spellbook.doneButton.getY() && y <= Spellbook.doneButton.getY() + Spellbook.doneButton.getHeight()){
 		   this.show = false;
 		   if(this.hideFunc !== undefined){
-			   this.hideFunc();
+			   this.hideFunc(this.hideArg);
 		   }
 	   }
 }
@@ -432,6 +442,12 @@ Spellbook.prototype.keyDown = function(kc){
 	if(kc == 40){	//Down arrow key
 		this.moveCursorDown();
 	}
+	if(kc == 110)
+		this.keyPressed(46);
+	if(kc == 190)
+		this.keyPressed(46);
+	if(kc == 46)
+		this.tabs[this.pointerTab].deleteAfterCursor();
 }
 
 Spellbook.prototype.keyPressed = function(kc){
@@ -446,10 +462,10 @@ Spellbook.prototype.draw = function(ctx){
 	this.tabs[this.pointerTab].draw(ctx);
 	
 	ctx.fillStyle = "rgba(0,0,0,0.8)";
-	ctx.fillRect(Spellbook.doneButton.x,Spellbook.doneButton.y,Spellbook.doneButton.width,Spellbook.doneButton.height);
+	ctx.fillRect(Spellbook.doneButton.getX(),Spellbook.doneButton.getY(),Spellbook.doneButton.getWidth(),Spellbook.doneButton.getHeight());
 	ctx.fillStyle = "rgba(255,255,255,1)";
 	ctx.font = Spellbook.doneButton.fontSize + "px " + Spellbook.doneButton.fontFamily;
-	ctx.fillText(Spellbook.doneButton.str, Spellbook.doneButton.x+Spellbook.doneButton.width/2-ctx.measureText(Spellbook.doneButton.str).width/2, Spellbook.doneButton.y+Spellbook.doneButton.height/2+Spellbook.doneButton.fontSize/2);
+	ctx.fillText(Spellbook.doneButton.getStr(), Spellbook.doneButton.getX()+Spellbook.doneButton.getWidth()/2-ctx.measureText(Spellbook.doneButton.getStr()).width/2, Spellbook.doneButton.getY()+Spellbook.doneButton.getHeight()/2+Spellbook.doneButton.fontSize/2);
 	ctx.restore();
 }
 
@@ -498,6 +514,33 @@ SpellbookTab.prototype.moveCursorDown = function(){
 	if(this.pointerX > this.lines[this.pointerY].length){this.pointerX=this.lines[this.pointerY].length;}
 }
 
+SpellbookTab.prototype.deleteBeforeCursor = function(){
+	if(this.pointerX > 0){
+		this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX-1) + this.lines[this.pointerY].substring(this.pointerX);
+		this.pointerX--;
+	}
+	else if(this.pointerY > 0){
+		this.pointerX = this.lines[this.pointerY-1].length;
+		var restOfLine = this.lines[this.pointerY];
+		this.lines.splice(this.pointerY, 1);
+		this.lines[this.pointerY-1]=this.lines[this.pointerY-1] + restOfLine;
+		this.pointerY--;
+	}
+}
+
+SpellbookTab.prototype.deleteAfterCursor = function(){
+	if(this.pointerX < this.lines[this.pointerY].length){
+		this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX) + this.lines[this.pointerY].substring(this.pointerX+1);
+	}
+	else{
+		if(this.pointerY < this.lines.length-1){
+			var restOfLine = this.lines[this.pointerY+1];
+			this.lines.splice(this.pointerY+1, 1);
+			this.lines[this.pointerY]=this.lines[this.pointerY] + restOfLine;
+		}
+	}
+}
+
 SpellbookTab.prototype.draw = function(ctx){
 	ctx.save();
 	ctx.fillStyle = "rgba(255,255,255,0.7)";
@@ -514,6 +557,15 @@ SpellbookTab.prototype.draw = function(ctx){
 	ctx.restore();
 }
 
+SpellbookTab.prototype.toString = function(){
+	var str = "";
+	for(i=0;i<this.lines.length;i++){
+		str += this.lines[i];
+		if(i!=this.lines.length-1) str += "\n";
+	}
+	return str;
+}
+
 SpellbookTab.prototype.keyPressed = function(kc){
 	if(kc == 10 || kc == 13 || kc == "Enter"){
 		var restOfLine;
@@ -525,32 +577,11 @@ SpellbookTab.prototype.keyPressed = function(kc){
 		this.pointerX = 0;
 	}
 	else if(kc == 8 || kc == "Backspace"){
-		if(this.pointerX > 0){
-			this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX-1) + this.lines[this.pointerY].substring(this.pointerX);
-			this.pointerX--;
-		}
-		else{
-			if(this.pointerY > 0){
-				this.pointerX = this.lines[this.pointerY-1].length;
-				var restOfLine = this.lines[this.pointerY];
-				this.lines.splice(this.pointerY, 1);
-				this.lines[this.pointerY-1]=this.lines[this.pointerY-1] + restOfLine;
-				this.pointerY--;
-			}
-		}
+		this.deleteBeforeCursor();
 	}
-	else if(kc == 46 || kc == "Delete"){
-		if(this.pointerX < this.lines[this.pointerY].length){
-			this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX) + this.lines[this.pointerY].substring(this.pointerX+1);
-		}
-		else{
-			if(this.pointerY < this.lines.length-1){
-				var restOfLine = this.lines[this.pointerY+1];
-				this.lines.splice(this.pointerY+1, 1);
-				this.lines[this.pointerY]=this.lines[this.pointerY] + restOfLine;
-			}
-		}
-	}
+	/*else if(kc == 46 || kc == "Delete"){
+		this.deleteAfterCursor();
+	}*/
 	else{
 		this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX) + ((typeof kc === "string") ? kc : String.fromCharCode(kc)) + this.lines[this.pointerY].substring(this.pointerX);
 		this.pointerX++;
