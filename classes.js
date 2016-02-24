@@ -386,7 +386,7 @@ ImageRepository.prototype.getImage = function(name){
 
 var Spellbook = function(){
 	this.tabs = [];
-	this.tabs.push(new SpellbookTab());
+	this.tabs.push(new SpellbookTab("1"));
 	this.pointerTab = 0;
 	this.show = false;
 	this.hideFunc;
@@ -423,6 +423,7 @@ Spellbook.prototype.mouseClick = function(x,y){
 	if(x >= Spellbook.doneButton.getX() && x <= Spellbook.doneButton.getX() + Spellbook.doneButton.getWidth() &&
 	   y >= Spellbook.doneButton.getY() && y <= Spellbook.doneButton.getY() + Spellbook.doneButton.getHeight()){
 		   this.show = false;
+		   this.tabs[this.pointerTab].saveText();
 		   if(this.hideFunc !== undefined){
 			   this.hideFunc(this.hideArg);
 		   }
@@ -461,8 +462,26 @@ Spellbook.prototype.draw = function(ctx){
 	
 	this.tabs[this.pointerTab].draw(ctx);
 	
-	ctx.fillStyle = "rgba(0,0,0,0.8)";
+	ctx.fillStyle = "rgba(32,32,64,0.5)";
 	ctx.fillRect(Spellbook.doneButton.getX(),Spellbook.doneButton.getY(),Spellbook.doneButton.getWidth(),Spellbook.doneButton.getHeight());
+	
+	ctx.save();
+	var curX = 1;
+	for(i=0;i<this.tabs.length;i++){
+		ctx.fillStyle = "rgba(0,0,0,0.5)";
+		ctx.font = "16px Consolas";
+		ctx.fillRect(curX,-20,ctx.measureText(this.tabs[i].name).width+6,20);
+		ctx.fillStyle = "rgba(255,255,255,0.7)";
+		ctx.fillText(this.tabs[i].name, curX+3, -2);
+		curX+=ctx.measureText(this.tabs[i].name).width+7;
+	}
+		ctx.fillStyle = "rgba(0,0,0,0.5)";
+		ctx.font = "14px Consolas";
+		ctx.fillRect(curX,-16,ctx.measureText("+").width+6,16);
+		ctx.fillStyle = "rgba(255,255,255,0.7)";
+		ctx.fillText("+", curX+3, -2);
+	ctx.restore();
+	
 	ctx.fillStyle = "rgba(255,255,255,1)";
 	ctx.font = Spellbook.doneButton.fontSize + "px " + Spellbook.doneButton.fontFamily;
 	ctx.fillText(Spellbook.doneButton.getStr(), Spellbook.doneButton.getX()+Spellbook.doneButton.getWidth()/2-ctx.measureText(Spellbook.doneButton.getStr()).width/2, Spellbook.doneButton.getY()+Spellbook.doneButton.getHeight()/2+Spellbook.doneButton.fontSize/2);
@@ -473,7 +492,8 @@ Spellbook.prototype.isHidden = function(){
 	return !this.show;
 }
 
-var SpellbookTab = function(){
+var SpellbookTab = function(name){
+	this.name = name;
 	this.lines = [];
 	this.lines.push("");
 	this.pointerX = 0;
@@ -553,7 +573,7 @@ SpellbookTab.prototype.draw = function(ctx){
 	ctx.restore();
 	
 	ctx.fillStyle = "rgba(255,255,255,0.7)";
-	ctx.fillRect(ctx.measureText(this.lines[this.pointerY].substring(0,this.pointerX)).width, this.pointerY*15+2, 1, 13);
+	if(Math.floor(Date.now()/500)%2 == 0)ctx.fillRect(ctx.measureText(this.lines[this.pointerY].substring(0,this.pointerX)).width, this.pointerY*15+2, 1, 15);
 	ctx.restore();
 }
 
@@ -579,11 +599,21 @@ SpellbookTab.prototype.keyPressed = function(kc){
 	else if(kc == 8 || kc == "Backspace"){
 		this.deleteBeforeCursor();
 	}
-	/*else if(kc == 46 || kc == "Delete"){
-		this.deleteAfterCursor();
-	}*/
 	else{
 		this.lines[this.pointerY] = this.lines[this.pointerY].substring(0,this.pointerX) + ((typeof kc === "string") ? kc : String.fromCharCode(kc)) + this.lines[this.pointerY].substring(this.pointerX);
 		this.pointerX++;
+	}
+}
+
+SpellbookTab.prototype.saveText = function(){
+	var str = this.toString();
+	var point = str.indexOf("function ");
+	if(point > -1){
+		str = str.substring(point+"function ".length);
+		str = str.trim();
+		var point2 = str.indexOf("("); if(point2 == -1) point2 = str.length+1;
+		var point22 = str.indexOf(" "); if(point22 == -1) point22 = str.length+1;
+		var point3 = Math.min(point2, point22);
+		if(point3 <= str.length) this.name = str.substring(0,point2);
 	}
 }
