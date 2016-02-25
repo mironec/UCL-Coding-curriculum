@@ -57,7 +57,7 @@ Tile.types = [];
 Tile.types.push({type: "grass", passable: true});
 
 Tile.prototype.isPassable = function(){
-	for(i=0;i<Tile.types.length;i++){
+	for(var i=0;i<Tile.types.length;i++){
 		if(this.type == Tile.types[i].type) return Tile.types[i].passable;
 	}
 	return false;
@@ -78,7 +78,7 @@ Map.prototype.draw = function(ctx){
 	ctx.save();
 	ctx.translate(this.beginX, this.beginY);
 	
-	for(i=0;i<this.tiles.length;i++){
+	for(var i=0;i<this.tiles.length;i++){
 		for(j=0;j<this.tiles[i].length;j++){
 			ctx.drawImage(this.imageRepository.getImage(this.tiles[i][j].type + this.tiles[i][j].variation), i*this.tileWidth, j*this.tileHeight);
 		}
@@ -103,7 +103,7 @@ Map.prototype.parseTile = function(data,x,y){
 }
 
 Map.prototype.parseMap = function(a){
-	for(i=0;i<a.length;i++){
+	for(var i=0;i<a.length;i++){
 		for(j=0;j<a[i].length;j++){
 			this.parseTile(a[i][j],i,j);
 		}
@@ -184,7 +184,7 @@ Character.prototype.getNearestTree = function(){
 	var closestTree = null;
 	var gO = this.parentLevel.gameObjects;
 	
-	for(i=0;i<gO.length;i++){
+	for(var i=0;i<gO.length;i++){
 		if(gO[i] instanceof Tree && gO[i].isAlive() ){
 			var thisDist = gO[i].distanceTo(this);
 			if(thisDist < closestDist){
@@ -279,13 +279,13 @@ var CharacterList = function(arr){
 }
 
 CharacterList.prototype.forEach = function(f){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		f.call(this.arr[i]);
 	}
 }
 
 CharacterList.prototype.chopTree = function(tree){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		this.arr[i].chopTree(tree);
 	}
 }
@@ -295,46 +295,46 @@ CharacterList.prototype.getNearestTree = function(){
 }
 
 CharacterList.prototype.chopNearestTree = function(){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		this.arr[i].chopNearestTree();
 	}
 }
 
 CharacterList.prototype.moveTo = function(x,y, callback){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		if(callback !== undefined) this.arr[i].moveTo(x,y,callback);
 		this.arr[i].moveTo(x,y);
 	}
 }
 
 CharacterList.prototype.movePixels = function(x,y, callback){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		if(callback !== undefined) this.arr[i].movePixels(x,y,callback);
 		this.arr[i].movePixels(x,y);
 	}
 }
 
 CharacterList.prototype.move = function(x,y, callback){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		if(callback !== undefined) this.arr[i].move(x,y,callback);
 		this.arr[i].move(x,y);
 	}
 }
 
 CharacterList.prototype.say = function(s){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		this.arr[i].say(s);
 	}
 }
 
 CharacterList.prototype.draw = function(ctx){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		this.arr[i].draw(ctx);
 	}
 }
 
 CharacterList.prototype.update = function(delta){
-	for(i=0;i<this.arr.length;i++){
+	for(var i=0;i<this.arr.length;i++){
 		this.arr[i].update(delta);
 	}
 }
@@ -364,7 +364,7 @@ ImageRepository.prototype.loadImages = function(names, urls, callback){
 	var calledBack = 0;
 	var len = names.length;
 	var parentRepo = this;
-	for(i=0;i<len;i++){
+	for(var i=0;i<len;i++){
 		parentRepo.loadImage(names[i],urls[i],function(){
 			calledBack++;
 			if(calledBack == len && callback !== undefined){
@@ -428,6 +428,25 @@ Spellbook.prototype.mouseClick = function(x,y){
 			   this.hideFunc(this.hideArg);
 		   }
 	   }
+	   
+	console.log("Mouse click: " + x + "," + y);
+	
+	var curX = 1;
+	for(var i=0;i<this.tabs.length;i++){
+		if(x>=curX && x<=curX+(this.tabs[i].width===undefined?-1:this.tabs[i].width) &&
+			y>=-20 && y<=0){
+			this.tabs[this.pointerTab].saveText();
+			this.pointerTab = i;
+		}
+		curX += (this.tabs[i].width===undefined?-1:this.tabs[i].width)+1;
+	}
+	if(x>=curX && x<=curX+15 &&
+		y>=-20 && y<=0){
+		console.log("New tab "+curX);
+		this.tabs[this.pointerTab].saveText();
+		this.tabs.push(new SpellbookTab(""+(this.tabs.length+1)));
+		this.pointerTab = this.tabs.length-1;
+	}
 }
 
 Spellbook.prototype.keyDown = function(kc){
@@ -466,15 +485,15 @@ Spellbook.prototype.draw = function(ctx){
 	ctx.fillRect(Spellbook.doneButton.getX(),Spellbook.doneButton.getY(),Spellbook.doneButton.getWidth(),Spellbook.doneButton.getHeight());
 	
 	ctx.save();
+	ctx.translate(0,-20);
 	var curX = 1;
-	for(i=0;i<this.tabs.length;i++){
-		ctx.fillStyle = "rgba(0,0,0,0.5)";
-		ctx.font = "16px Consolas";
-		ctx.fillRect(curX,-20,ctx.measureText(this.tabs[i].name).width+6,20);
-		ctx.fillStyle = "rgba(255,255,255,0.7)";
-		ctx.fillText(this.tabs[i].name, curX+3, -2);
-		curX+=ctx.measureText(this.tabs[i].name).width+7;
+	for(var i=0;i<this.tabs.length;i++){
+		this.tabs[i].drawTab(ctx);
+		curX += this.tabs[i].width+1;
+		ctx.translate(this.tabs[i].width+1,0);
 	}
+	ctx.restore();
+	ctx.save();
 		ctx.fillStyle = "rgba(0,0,0,0.5)";
 		ctx.font = "14px Consolas";
 		ctx.fillRect(curX,-16,ctx.measureText("+").width+6,16);
@@ -566,7 +585,7 @@ SpellbookTab.prototype.draw = function(ctx){
 	ctx.fillStyle = "rgba(255,255,255,0.7)";
 	ctx.font = "14px Consolas";
 	ctx.save();
-	for(i=0;i<this.lines.length;i++){
+	for(var i=0;i<this.lines.length;i++){
 		ctx.translate(0,15);
 		ctx.fillText(this.lines[i],0,0);
 	}
@@ -577,9 +596,21 @@ SpellbookTab.prototype.draw = function(ctx){
 	ctx.restore();
 }
 
+SpellbookTab.prototype.drawTab = function(ctx){
+	ctx.save();
+	ctx.fillStyle = "rgba(0,0,0,0.5)";
+	ctx.font = "16px Consolas";
+	ctx.fillRect(0,0,ctx.measureText(this.name).width+6,20);
+	ctx.fillStyle = "rgba(255,255,255,0.7)";
+	ctx.fillText(this.name, 3, 18);
+	this.width = ctx.measureText(this.name).width+6;
+	this.height = 20;
+	ctx.restore();
+}
+
 SpellbookTab.prototype.toString = function(){
 	var str = "";
-	for(i=0;i<this.lines.length;i++){
+	for(var i=0;i<this.lines.length;i++){
 		str += this.lines[i];
 		if(i!=this.lines.length-1) str += "\n";
 	}
