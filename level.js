@@ -30,14 +30,21 @@ var Level = function(ctx, imageRepository){
 		x: 0.0,
 		y: 0.0
 	}
-	
-	this.spellbook = new Spellbook();
-	this.spellbook.hideFunc = this.hideSpellbook;
-	this.spellbook.hideArg = this;
-	
+
 	this.allowedFunctions = [];
 	this.allowedFunctions.push(new GameFunction("getCharacterByName","currentLevel."));
 	this.allowedFunctions.push(new GameFunction("getNearestTree",""));
+	
+	this.spellbook = new Spellbook(this.allowedFunctions);
+	this.spellbook.hideFunc = this.hideSpellbook;
+	this.spellbook.hideArg = this;
+	
+	this.spellbook.tabs[0].lines[0]="function bob(){return getCharacterByName('Bob');}";
+	this.spellbook.saveText();
+	this.spellbook.tabs.push(new SpellbookTab("2"));
+	this.spellbook.tabs[1].lines[0]="function square(){bob().move(0,1); bob().move(1,0); bob().move(0,-1); bob().move(-1,0,square);}";
+	this.spellbook.pointerTab = 1;
+	this.spellbook.saveText();
 }
 
 Level.prototype.setCtx = function(ctx){
@@ -78,7 +85,7 @@ Level.prototype.afterStart = function(){
 	var seed = 3824723.4358;
 	var pseudoRand = seed;
 	var b = [];
-	for(i=0;i<40;i++){
+	for(var i=0;i<40;i++){
 		var a = [];
 		for(j=0;j<40;j++){
 			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
@@ -172,20 +179,24 @@ Level.prototype.onKeyPress = function(e){
 	}
 }
 
+Level.prototype.fixFunction = function(i){
+	
+}
+
 Level.prototype.executeScipt = function(script){
 	var ok = false;
-	for(i=0;i<this.allowedFunctions.length;i++){
+	for(var i=0;i<this.allowedFunctions.length;i++){
 		if(script.startsWith(this.allowedFunctions[i].getName())) ok=true;
 		script = script.replace(new RegExp(this.allowedFunctions[i].getName(),"g"), this.allowedFunctions[i].getHelpingNamespace()+this.allowedFunctions[i].getName());
 	}
 	ok = true;
 	if(ok){
-		var lib = "";
-		for(i=0;i<this.spellbook.tabs.length;i++){
-			lib += this.spellbook.tabs[i].toString();
+		for(var i=0;i<this.spellbook.tabs.length;i++){
+			script = script.replace(new RegExp(this.spellbook.tabs[i].name+"\\(\\)","g"), "currentLevel.spellbook.functions["+i+"].apply(currentLevel)");
+			script = script.replace(new RegExp(this.spellbook.tabs[i].name+"\\(","g"), "currentLevel.spellbook.functions["+i+"].apply(currentLevel,");
 		}
-		lib += " ";
-		var greatFunc = new Function(lib+"\n"+script);
+
+		var greatFunc = new Function(script);
 		greatFunc.apply();
 	}
 }
@@ -221,11 +232,11 @@ Level.prototype.draw = function(delta){
 	c.translate(Math.round(canvas.width/2), Math.round(canvas.height/2));
 	c.translate(-this.camera.x, -this.camera.y);
 	
-	this.map.draw(ctx);
+	this.map.draw(c, -this.camera.x, -this.camera.y, canvas);
 	
 	c.save();
 	c.translate(0,0);
-	for(i=0;i<this.thingsToDraw.length;i++){
+	for(var i=0;i<this.thingsToDraw.length;i++){
 		this.thingsToDraw[i].draw(c);
 	}
 	c.restore();
@@ -233,13 +244,14 @@ Level.prototype.draw = function(delta){
 	c.restore();
 	
 	if(this.gameFocus == this.FOCUS_SCRIPT_BAR){
+		var fontSize = 18;
 		c.fillStyle = "rgba(0,0,0,0.3)";
-		c.fillRect(0,canvas.height-18,canvas.width, 18);
+		c.fillRect(0,canvas.height-18,canvas.width, fontSize+4);
 		c.fillStyle = "rgba(255,255,255,0.7)";
-		c.font="14px Arial";
-		c.fillText(this.scriptBar,5,canvas.height-4);
+		c.font= fontSize + "px Consolas";
+		c.fillText(this.scriptBar,5,canvas.height-3);
 		if(Math.floor(Date.now()/250) % 2 == 0)
-			c.fillRect(c.measureText(this.scriptBar.substring(0,this.scriptPointer)).width+5,canvas.height-15,1,14);
+			c.fillRect(c.measureText(this.scriptBar.substring(0,this.scriptPointer)).width+5,canvas.height-fontSize-1,1,fontSize);
 	}
 	if(this.gameFocus == this.FOCUS_TUTORIAL || this.persistTutorial){
 		c.fillStyle = "rgba(0,0,0,0.3)";
@@ -247,7 +259,7 @@ Level.prototype.draw = function(delta){
 		
 		c.fillStyle = "rgba(255,255,255,0.7)";
 		var a = this.tutorialText.split("\n");
-		for(i=0;i<a.length;i++){
+		for(var i=0;i<a.length;i++){
 			c.font="14px Arial";
 			if(a[i].startsWith('<c>')){
 				c.font="14px Consolas";
@@ -334,7 +346,7 @@ Level.prototype.getNearestTreeTo = function(character){
 	var closestDist = 1000*1000*1000;
 	var closestTree = null;
 	
-	for(i=0;i<this.gameObjects.length;i++){
+	for(var i=0;i<this.gameObjects.length;i++){
 		if(this.gameObjects[i] instanceof Tree && this.gameObjects[i].isAlive() ){
 			var thisDist = this.gameObjects[i].distanceTo(character);
 			if(thisDist < closestDist){

@@ -2,10 +2,12 @@ var canvas;
 var ctx;
 
 var lastMainLoopTime;
+var lastSecondTime;
 var keysDown = {};
 var mouseButtonsDown = {};
 
-var drawCycle = 0;
+var frames = 0;
+var fps = 0;
 var imageRepository = new ImageRepository();
 var currentLevel;
 var doDraw, doLogic;
@@ -92,6 +94,7 @@ function postLoad(){
 	currentLevel.start();
 	
 	doDraw = doLogic = true;
+	lastSecondTime = Date.now();
 	
 	mainLoop();
 }
@@ -101,7 +104,7 @@ function draw(delta){
 	
 	ctx.fillStyle = "#000000";
 	ctx.font = "12px Arial";
-	ctx.fillText(drawCycle,10,10);
+	ctx.fillText(fps,10,10);
 }
 
 function update(delta){
@@ -113,7 +116,12 @@ var mainLoop = function(){
 	var delta = now - lastMainLoopTime;
 	if(delta>250){delta=250;}
 
-	drawCycle = Math.round(1000/delta);
+	frames++;
+	if(Date.now() - lastSecondTime >= 1000) {
+		fps = frames;
+		frames = 0;
+		lastSecondTime += 1000;
+	}
 	
 	if(doLogic) update(delta);
 	if(doDraw) draw(delta);

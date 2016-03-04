@@ -74,12 +74,15 @@ var Map = function(imageRepository){
 	this.tiles = [];
 }
 
-Map.prototype.draw = function(ctx){
+Map.prototype.draw = function(ctx, cameraX, cameraY, canvas){
 	ctx.save();
 	ctx.translate(this.beginX, this.beginY);
 	
-	for(var i=0;i<this.tiles.length;i++){
-		for(j=0;j<this.tiles[i].length;j++){
+	var startX = Math.floor(Math.max(-this.beginX - cameraX - Math.round(canvas.width/2),0)/this.tileWidth);
+	var startY = Math.floor(Math.max(-this.beginY - cameraY - Math.round(canvas.height/2),0)/this.tileHeight);
+
+	for(var i=startX;i<this.tiles.length && i<startX+Math.ceil(canvas.width/this.tileWidth)+1;i++){
+		for(var j=startY;j<this.tiles[i].length && j<startY + Math.ceil(canvas.height/this.tileHeight)+1;j++){
 			ctx.drawImage(this.imageRepository.getImage(this.tiles[i][j].type + this.tiles[i][j].variation), i*this.tileWidth, j*this.tileHeight);
 		}
 	}
@@ -167,7 +170,10 @@ Character.prototype.moveTo = function(x,y){
 }
 
 Character.prototype.move = function(rtx,rty, callback){
-	this.movePixels(rtx*this.parentLevel.map.tileWidth, rty*this.parentLevel.map.tileHeight);
+	if(callback !== undefined)
+		this.movePixels(rtx*this.parentLevel.map.tileWidth, rty*this.parentLevel.map.tileHeight, callback);
+	else
+		this.movePixels(rtx*this.parentLevel.map.tileWidth, rty*this.parentLevel.map.tileHeight);
 }
 
 Character.prototype.movePixels = function(rx,ry, callback){
@@ -227,7 +233,7 @@ Character.prototype.update = function(delta){
 				var desireY = moveY - this.y;
 				
 				var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-				if(desireDist == 0) {if(curOrder.getData().callback !== undefined) callback(); this.orders.shift(); return;}
+				if(desireDist == 0) {if(curOrder.getData().callback !== undefined) curOrder.getData().callback.apply(); this.orders.shift(); return;}
 				var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
 				
 				this.x += realDist/desireDist * desireX;
@@ -303,21 +309,21 @@ CharacterList.prototype.chopNearestTree = function(){
 CharacterList.prototype.moveTo = function(x,y, callback){
 	for(var i=0;i<this.arr.length;i++){
 		if(callback !== undefined) this.arr[i].moveTo(x,y,callback);
-		this.arr[i].moveTo(x,y);
+		else this.arr[i].moveTo(x,y);
 	}
 }
 
 CharacterList.prototype.movePixels = function(x,y, callback){
 	for(var i=0;i<this.arr.length;i++){
 		if(callback !== undefined) this.arr[i].movePixels(x,y,callback);
-		this.arr[i].movePixels(x,y);
+		else this.arr[i].movePixels(x,y);
 	}
 }
 
 CharacterList.prototype.move = function(x,y, callback){
 	for(var i=0;i<this.arr.length;i++){
 		if(callback !== undefined) this.arr[i].move(x,y,callback);
-		this.arr[i].move(x,y);
+		else this.arr[i].move(x,y);
 	}
 }
 
@@ -345,8 +351,8 @@ CharacterList.prototype.add = function(character){
 
 //ImageRepository Class
 var ImageRepository = function(){
-	this.repo = new Array();
-	this.imgReady = new Array();
+	this.repo = [];
+	this.imgReady = [];
 }
 
 ImageRepository.prototype.loadImage = function(name, url, callback){
@@ -384,13 +390,15 @@ ImageRepository.prototype.getImage = function(name){
 	return (this.imgReady[name]===undefined || this.imgReady[name] === false) ? null : this.repo[name];
 }
 
-var Spellbook = function(){
+var Spellbook = function(allowedFunctions){
 	this.tabs = [];
 	this.tabs.push(new SpellbookTab("1"));
 	this.pointerTab = 0;
 	this.show = false;
 	this.hideFunc;
 	this.hideArg;
+	this.allowedFunctions = allowedFunctions;
+	this.functions = [];
 }
 
 Spellbook.doneButton = {
@@ -423,7 +431,7 @@ Spellbook.prototype.mouseClick = function(x,y){
 	if(x >= Spellbook.doneButton.getX() && x <= Spellbook.doneButton.getX() + Spellbook.doneButton.getWidth() &&
 	   y >= Spellbook.doneButton.getY() && y <= Spellbook.doneButton.getY() + Spellbook.doneButton.getHeight()){
 		   this.show = false;
-		   this.tabs[this.pointerTab].saveText();
+		   this.saveText();
 		   if(this.hideFunc !== undefined){
 			   this.hideFunc(this.hideArg);
 		   }
@@ -435,7 +443,7 @@ Spellbook.prototype.mouseClick = function(x,y){
 	for(var i=0;i<this.tabs.length;i++){
 		if(x>=curX && x<=curX+(this.tabs[i].width===undefined?-1:this.tabs[i].width) &&
 			y>=-20 && y<=0){
-			this.tabs[this.pointerTab].saveText();
+			this.saveText();
 			this.pointerTab = i;
 		}
 		curX += (this.tabs[i].width===undefined?-1:this.tabs[i].width)+1;
@@ -443,7 +451,7 @@ Spellbook.prototype.mouseClick = function(x,y){
 	if(x>=curX && x<=curX+15 &&
 		y>=-20 && y<=0){
 		console.log("New tab "+curX);
-		this.tabs[this.pointerTab].saveText();
+		this.saveText();
 		this.tabs.push(new SpellbookTab(""+(this.tabs.length+1)));
 		this.pointerTab = this.tabs.length-1;
 	}
@@ -472,6 +480,25 @@ Spellbook.prototype.keyDown = function(kc){
 
 Spellbook.prototype.keyPressed = function(kc){
 	this.tabs[this.pointerTab].keyPressed(kc);
+}
+
+Spellbook.prototype.saveText = function(){
+	this.tabs[this.pointerTab].saveText();
+	var str = this.tabs[this.pointerTab].toString()+" return "+this.tabs[this.pointerTab].name+"();";
+	this.functions[this.pointerTab]=new Function();
+
+	str = str.trim();
+	for(var j=0;j<this.allowedFunctions.length;j++){
+		str = str.trim().replace(new RegExp(this.allowedFunctions[j].getName(),"g"), this.allowedFunctions[j].getHelpingNamespace()+this.allowedFunctions[j].getName());
+	}
+	for(var z=0;z<this.tabs.length;z++){
+		if(z==this.pointerTab) continue;
+		
+		str = str.replace(new RegExp(this.tabs[z].name+"\\(\\s*\\)","g"), "currentLevel.spellbook.functions["+z+"].apply(currentLevel)")
+		.replace(new RegExp(this.tabs[z].name+"\\(","g"), "currentLevel.spellbook.functions["+z+"].apply(currentLevel,");
+	}
+
+	this.functions[this.pointerTab] = new Function(str.trim());
 }
 
 Spellbook.prototype.draw = function(ctx){
