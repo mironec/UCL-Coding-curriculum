@@ -1,4 +1,4 @@
-var Level = function(ctx, imageRepository){
+function Level (ctx, imageRepository){
 	this.keysDown = {};
 	this.mouseButtonsDown = {};
 	
@@ -58,27 +58,37 @@ Level.prototype.setImageRepository = function(imageRepo){
 
 Level.prototype.start = function(){
 	var parentLevel = this;
-	window.addEventListener("keydown", function (e) {
+	window.addEventListener("keydown", this.onKeyDownE = function (e) {
 		parentLevel.onKeyDown(e);
 	}, false);
-	window.addEventListener("keypress", function (e) {
+	window.addEventListener("keypress", this.onKeyPressE = function (e) {
 		parentLevel.onKeyPress(e);
 	}, false);
-	window.addEventListener("keyup", function (e) {
+	window.addEventListener("keyup", this.onKeyUpE = function (e) {
 		parentLevel.onKeyUp(e);
 	}, false);
 	
-	window.addEventListener("mousedown", function (e){
+	window.addEventListener("mousedown", this.onMouseDownE = function (e){
 		parentLevel.onMouseDown(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 	}, false);
-	window.addEventListener("mousemove", function (e){
+	window.addEventListener("mousemove", this.onMouseMoveE = function (e){
 		parentLevel.onMouseMove(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 	}, false);
-	window.addEventListener("mouseup", function (e){
+	window.addEventListener("mouseup", this.onMouseUpE = function (e){
 		parentLevel.onMouseUp(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 	}, false);
 	
 	this.afterStart();
+}
+
+Level.prototype.destroy = function(){
+	window.removeEventListener("keydown", this.onKeyDownE);
+	window.removeEventListener("keypress", this.onKeyPressE);
+	window.removeEventListener("keyup", this.onKeyUpE);
+
+	window.removeEventListener("mousedown", this.onMouseDownE);
+	window.removeEventListener("mousemove", this.onMouseMoveE);
+	window.removeEventListener("mouseup", this.onMouseUpE);
 }
 
 Level.prototype.afterStart = function(){
@@ -282,7 +292,7 @@ Level.prototype.update = function(delta){
 	this.afterUpdate(delta);
 }
 
-Level.prototype.afterUpdate = function(delta){}
+Level.prototype.afterUpdate = function(delta){return delta;}
 
 Level.prototype.getCharacterByName = function(name){
 	var retCharacterList = new CharacterList();

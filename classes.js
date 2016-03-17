@@ -1,5 +1,5 @@
 //GameObject Class
-var GameObject = function(x,y){
+function GameObject(x,y){
 	this.x = x;
 	this.y = y;
 	this.width = 0;
@@ -40,7 +40,7 @@ GameObject.prototype.distanceTo = function(gO){
 	return Math.sqrt(disX*disX + disY*disY);
 }
 
-var GameFunction = function(name,helpingNamespace){
+function GameFunction(name,helpingNamespace){
 	this.name = name;
 	this.helpingNamespace = helpingNamespace;
 }
@@ -48,7 +48,7 @@ var GameFunction = function(name,helpingNamespace){
 GameFunction.prototype.getName = function(){ return this.name; }
 GameFunction.prototype.getHelpingNamespace = function(){ return this.helpingNamespace; }
 
-var Tile = function(type, variation){
+function Tile(type, variation){
 	this.type = type;
 	this.variation = variation || 1;
 }
@@ -63,7 +63,7 @@ Tile.prototype.isPassable = function(){
 	return false;
 }
 
-var Map = function(imageRepository){
+function Map(imageRepository){
 	this.beginX = 0;
 	this.beginY = 0;
 	this.numTilesX = 0;
@@ -115,7 +115,7 @@ Map.prototype.parseMap = function(a){
 }
 
 //Tree Class, inherits GameObject
-var Tree = function(x,y,aliveImage,deadImage){
+function Tree(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
 	
 	this.width = 40;
@@ -128,7 +128,7 @@ var Tree = function(x,y,aliveImage,deadImage){
 }
 
 Tree.prototype = Object.create(GameObject.prototype);
-Tree.prototype.constructor = GameObject;
+Tree.prototype.constructor = Tree;
 
 Tree.prototype.draw = function(ctx){
 	ctx.save();
@@ -148,7 +148,7 @@ Tree.prototype.isAlive = function(){
 }
 
 //Character Class, inherits GameObject
-var Character = function(name,x,y,parentLevel){
+function Character(name,x,y,parentLevel){
 	GameObject.call(this,x,y);
 	
 	this.parentLevel = parentLevel;
@@ -163,7 +163,7 @@ var Character = function(name,x,y,parentLevel){
 }
 
 Character.prototype = Object.create(GameObject.prototype);
-Character.prototype.constructor = GameObject;
+Character.prototype.constructor = Character;
 
 Character.prototype.moveTo = function(x,y){
 	this.orders.push(new Order("move",{x: x, y: y}));
@@ -262,7 +262,7 @@ Character.prototype.draw = function(ctx){
 }
 
 //Order Class
-var Order = function(name, data){
+function Order(name, data){
 	this.name = name;
 	this.data = data;
 }
@@ -280,7 +280,7 @@ Order.prototype.getData = function(){
 }
 
 //CharacterList Class
-var CharacterList = function(arr){
+function CharacterList(arr){
 	this.arr = [];
 }
 
@@ -350,9 +350,9 @@ CharacterList.prototype.add = function(character){
 }
 
 //ImageRepository Class
-var ImageRepository = function(){
-	this.repo = [];
-	this.imgReady = [];
+function ImageRepository(){
+	this.repo = {};
+	this.imgReady = {};
 }
 
 ImageRepository.prototype.loadImage = function(name, url, callback){
@@ -390,7 +390,14 @@ ImageRepository.prototype.getImage = function(name){
 	return (this.imgReady[name]===undefined || this.imgReady[name] === false) ? null : this.repo[name];
 }
 
-var Spellbook = function(allowedFunctions){
+ImageRepository.prototype.findKeyForImage = function(img){
+	for(var i in this.repo){
+		if(img === this.repo[i]) return i;
+	}
+	return "null";
+}
+
+function Spellbook(allowedFunctions){
 	this.tabs = [];
 	this.tabs.push(new SpellbookTab("1"));
 	this.pointerTab = 0;
@@ -538,7 +545,7 @@ Spellbook.prototype.isHidden = function(){
 	return !this.show;
 }
 
-var SpellbookTab = function(name){
+function SpellbookTab(name){
 	this.name = name;
 	this.lines = [];
 	this.lines.push("");

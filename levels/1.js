@@ -1,5 +1,7 @@
 var level1 = new Level(null, null);
 
+level1.moduleName = "level1";
+
 level1.afterStart = function(){
 	var seed = 3824723.4358;
 	var pseudoRand = seed;
@@ -93,24 +95,6 @@ level1.afterUpdate = function(delta){
 	}
 	
 	if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
-		
+		//Do second level
 	}
-	
-	/*if(this.done == 2 && bob.sayText == 8){
-		this.showTutorial("Great!", false);
-		this.done = 3;
-	}
-	
-	if(this.done == 3 && this.gameFocus != this.FOCUS_TUTORIAL){
-		var i = Math.floor(Math.random()*100000);
-		var o = i*Math.floor(Math.random()*100000);
-		this.resultThing = o/i;
-		this.showTutorial("You could do that in your head, but what about "+o+"/"+i+"?", true);
-		this.done = 4;
-	}
-	
-	if(this.done == 4 && bob.sayText == this.resultThing){
-		this.showTutorial("Good job...", false);
-		this.done = 5;
-	}*/
 }
