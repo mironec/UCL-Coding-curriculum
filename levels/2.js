@@ -1,6 +1,8 @@
-var level1 = new Level(null, null);
+var level2 = new Level(null, null);
 
-level1.afterStart = function(){
+level2.moduleName = "level2";
+
+level2.afterStart = function(){
 	var seed = 3824723.4358;
 	var pseudoRand = seed;
 	var b = [];
@@ -24,25 +26,25 @@ level1.afterStart = function(){
 	this.thingsToDraw.push(tree1);
 	this.gameObjects.push(tree1);
 	
-	this.showTutorial("In the beginning of time, Bob was there.\n\n<Press enter to continue>", false);
+	this.showTutorial("Now that you've grasp the idea of becoming a master of DarkScript, you will now be exposed to part of Bob's intellectual powers\n\n<Press enter to continue>", false);
 	this.done = 0;
 }
 
-level1.afterUpdate = function(delta){
+level2.afterUpdate = function(delta){
 	var bob = this.getCharacterByName("Bob").arr[0];
 	if(this.done == 0 && this.gameFocus != this.FOCUS_TUTORIAL){
 		bob.sayTime = 0;
-		this.showTutorial("Bob was given the power of speech. When Bob speaks, he must first identify his own presence. Using:\n\n<c>getCharacterByName(\"Bob\")\n\nTo speak, he must further specify his glorious words:\n\n<c>getCharacterByName(\"Bob\").say(\"Hello World!\")\n\nTry it yourself now, press the 'Enter' key to bring forth \"BOB the console\", your text-to-magic conversion device and type in the above code.", true);
+		this.showTutorial("Looking at Bob, Bob at first may not appear to be mighty capable of much. However, Bob does in fact have superior mathematical ability. Try testing Bob out by summoning BOB the console and write: \n\n<c>getCharacterByName(“Bob”).say(20 + 3)\n\n", true);
 		this.done = 1;
 	}
 	
 	if(this.done == 1 && bob.sayTime > 0){
-		if(bob.sayText.toLowerCase() == "hello world!"){
-			this.showTutorial("Do you feel the power of speech surging through your finger tips?", false);
+		if(bob.sayText.toLowerCase() == "23"){
+			this.showTutorial("See? Bob is perfectly able to spontaneously answer this simple level of arithmetic. At the moment, Bob is feeling a bit chuffed. Look at Bob grin.", false);
 			this.done = 2;
 		}
-		else if(bob.sayText.toLowerCase() == "hello world"){
-			this.showTutorial("NOT ENOUGH PASSION, put that ! in there.", false);
+		else if(bob.sayText.toLowerCase() != "23"){
+			this.showTutorial("make sure at this moment you're telling bob to answer 20 + 3!", false);
 			this.done = 0;
 		}
 		else{
@@ -50,67 +52,104 @@ level1.afterUpdate = function(delta){
 			this.done = 0;
 		}
 	}
-	
 	if(this.done == 2 && this.gameFocus != this.FOCUS_TUTORIAL){
-		this.showTutorial("When the Bob-niverse was born, the world was created where every Bob would move by x and y co-ordinates.\nTry moving Bob 3 tiles south using:\n\n<c>getCharacterByName(\"Bob\").move(0, 3)", true);
-		this.done = 3;
-	}
-	
-	if(this.done == 3 && bob.orders.length == 0 && !(bob.x == 0 && bob.y == 0) ){
-		if(bob.x == 0 && bob.y == 3*this.map.tileHeight){
-			this.showTutorial("Good job. Now try moving Bob again using move(3, 0).", true);
-			this.done = 4;
-		}
-		else{
-			this.showTutorial("That's the wrong way!", false);
-			bob.moveTo(0,0);
-			this.done = 2;
-		}
-	}
-	
-	if(this.done == 4 && bob.orders.length == 0 && !(bob.x == 0 && bob.y == 3*this.map.tileHeight) ){
-		if(bob.x == 3*this.map.tileWidth && bob.y == 3*this.map.tileHeight){
-			this.showTutorial("How about move(-3, -3)?", true);
-			this.done = 5;
-		}
-		else{
-			this.showTutorial("That's the wrong way!", false);
-			bob.moveTo(0,3*this.map.tileHeight);
-			this.done = 3;
-		}
-	}
-	
-	if(this.done == 5 && bob.orders.length == 0 && !(bob.x == 3*this.map.tileWidth && bob.y == 3*this.map.tileHeight) ){
-		if(bob.x == 0 && bob.y == 0){
-			this.showTutorial("I'm starting to like the way you move Bob.", false);
-			this.done = 6;
-		}
-		else{
-			this.showTutorial("That's the wrong way!", false);
-			bob.moveTo(3*this.map.tileWidth,3*this.map.tileHeight);
-			this.done = 4;
-		}
-	}
-	
-	if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
-		
-	}
-	
-	/*if(this.done == 2 && bob.sayText == 8){
-		this.showTutorial("Great!", false);
-		this.done = 3;
-	}
-	
+        this.showTutorial("How about we try to wipe that cheesy smirk off Bob’s face?", false);
+        this.done = 3;
+    } 
+    
 	if(this.done == 3 && this.gameFocus != this.FOCUS_TUTORIAL){
-		var i = Math.floor(Math.random()*100000);
-		var o = i*Math.floor(Math.random()*100000);
-		this.resultThing = o/i;
-		this.showTutorial("You could do that in your head, but what about "+o+"/"+i+"?", true);
+		this.showTutorial("Looks like Bob heard our plans, Bob has the serious face on…", false);
 		this.done = 4;
 	}
-	
-	if(this.done == 4 && bob.sayText == this.resultThing){
-		this.showTutorial("Good job...", false);
+    
+    if(this.done == 4 && this.gameFocus != this.FOCUS_TUTORIAL){
+        bob.sayTime = 0;
+		this.showTutorial("We’ll take it up a notch, try throwing this at Bob, and make sure you figure out the answer yourself first to check if Bob is right!: \n\n<c>getCharacterByName(“Bob”).say((1000/20)*5 + (120 – 100))\n\n", true);
 		this.done = 5;
-	}*/
+	}
+	//This is the if statement that will tell whether the user typed into the console correctly. Otherwise we make the user retype the statement
+    if(this.done == 5 && bob.sayTime > 0){
+		if(bob.sayText.toLowerCase() == "270"){
+			this.showTutorial("Looks like that didn’t throw Bob off either, Bob is just showing off now, just look at Bob", false);
+			this.done = 6;
+		}
+		else if(bob.sayText.toLowerCase() != "270"){
+			this.showTutorial("Are you sure you've written the intense mathematical expression correctly?", false);
+			this.done = 4;
+		}
+		else{
+			this.showTutorial("Bob said something incomprehensible. Again.", false);
+			this.done = 4;
+		}
+	}
+    
+    if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Looks like I’ll have to pull out our trump card. I will expose to you, Bob’s mathematical limit!", false);
+		this.done = 7;
+	}
+    //insert unhappy bob here
+    
+    if(this.done == 7 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Bob, don’t be so unhappy, if we want The Great Bob (you) to save the Bobniverse, we need to show what you can and cannot do. Just bear with the embarrassment for a bit.", false);
+		this.done = 8;
+	}
+	
+    if(this.done == 8 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Ok, just ignore Bob. Since I, Bob the Narrator shall share with you, Bob’s one and only mathematical limit! Drum roll please…", false);
+		this.done = 9;
+	}
+    
+    if(this.done == 9 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Precedence!", false);
+		this.done = 10;
+	}
+    
+   
+    if(this.done == 10 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial(" If you recall when you learnt about Bidmas or Bodmas, certain mathematical operators were applied first before others. The same is true for Bob when Bob calculates but in a slightly different way...", false);
+		this.done = 11;    
+	}
+    
+    if(this.done == 11 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("if you were to do: \n\n<c>getCharacterByName(“Bob”).say(5 - 2 + 3)\n\n By Bid/Bodmas you would assume the answer to be 0. But for Bob on the other hand, since Bob received Bob-niverse education, Bob would evaluate 6 instead.", false);
+		this.done = 12;
+	}
+    
+    if(this.done == 12 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Let me explain.", false);
+		this.done = 13;
+	}
+    
+    if(this.done == 13 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("In Bob-niverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction has the same but lower precedence.", false);
+		this.done = 14;
+	}
+    
+    if(this.done == 13 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("In Bob-niverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction has the same but lower precedence.", false);
+		this.done = 14;
+	}
+    
+    if(this.done == 14 && this.gameFocus != this.FOCUS_TUTORIAL){
+        this.sayTime = 0;
+		this.showTutorial("The truth is, Bobs are in love with using Multiplication and Divisions more because Bobs are biased. Don’t be like Bob. So try this to prove Bobs affection for Bob’s unrequited love: \n\n<c>getCharacterByName(“Bob”).say(3 + 4 * 5)\n\n ", true);
+		this.done = 15;
+	}
+    
+     if(this.done == 15 && bob.sayTime > 0){
+		if(bob.sayText.toLowerCase() == "23"){
+			this.showTutorial("Looks like that didn’t throw Bob off either, Bob is just showing off now, just look at Bob", false);
+			this.done = 16;
+		}
+		else if(bob.sayText.toLowerCase() != "23"){
+			this.showTutorial("Are you sure you've written the intense mathematical expression correctly?", false);
+			this.done = 16;
+		}
+		else{
+			this.showTutorial("Bob said something incomprehensible. Again.", false);
+			this.done = 16;
+		}
+	}
+    
+    
 }

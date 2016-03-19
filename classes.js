@@ -215,7 +215,7 @@ Character.prototype.chopNearestTree = function(){
 }
 
 Character.prototype.say = function(s){
-	this.sayText = s;
+	this.sayText = ""+s;
 	this.sayTime = 5000;
 }
 
