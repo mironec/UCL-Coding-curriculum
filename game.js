@@ -191,7 +191,7 @@ function postLoad(){
 		loadLevel();
 	}
 	else{
-		currentLevel = level2;
+		currentLevel = level1;
 		currentLevel.setCtx(ctx);
 		currentLevel.setImageRepository(imageRepository);
 		currentLevel.start();
