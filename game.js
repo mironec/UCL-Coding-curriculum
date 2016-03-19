@@ -87,8 +87,10 @@ function init(){
 }
 
 function saveLevel(){
+	localStorage.setItem("uncleBob.savedLevelName", currentLevel.moduleName);
+
 	var data = JSON.stringify(
-		{moduleName: currentLevel.moduleName, gameFocus: currentLevel.gameFocus,
+		{gameFocus: currentLevel.gameFocus,
 		done: currentLevel.done, tutorialText: currentLevel.tutorialText, persistTutorial: currentLevel.persistTutorial,
 		camera: currentLevel.camera, spellbookTabs: currentLevel.spellbook.tabs,
 		characters: currentLevel.characters, thingsToDraw: currentLevel.thingsToDraw,
@@ -100,13 +102,13 @@ function saveLevel(){
 		if(value instanceof Array){
 			return value;
 		}
-		if(value.constructor.name == "Tree" || value.constructor.name == "Character"){
+		if(value instanceof Object && (value.constructor.name == "Tree" || value.constructor.name == "Character")){
 			for(var i = 0;i<currentLevel.gameObjects.length;i++){
 				if(currentLevel.gameObjects[i] === value)
 					return {value: i, protoHack: value.constructor.name};
 			}
 		}
-		if(value.constructor.name === "HTMLImageElement"){
+		if(value instanceof Object && value.constructor.name === "HTMLImageElement"){
 			return {value: imageRepository.findKeyForImage(value), protoHack: value.constructor.name};
 		}
 		if(typeof value === 'object' && key !== 'value' && key !== ''){
@@ -122,7 +124,7 @@ function saveLevel(){
 		if(value instanceof Array){
 			return value;
 		}
-		if(value.constructor.name === "HTMLImageElement"){
+		if(value instanceof Object && value.constructor.name === "HTMLImageElement"){
 			return {value: imageRepository.findKeyForImage(value), protoHack: value.constructor.name};
 		}
 		if(typeof value === 'object' && key !== 'value' && key !== ''){
@@ -138,9 +140,17 @@ function saveLevel(){
 }
 
 function loadLevel(){
+	if(currentLevel !== undefined) currentLevel.destroy();
+
+	currentLevel = window[localStorage.getItem("uncleBob.savedLevelName")];
+	currentLevel.setCtx(ctx);
+	currentLevel.setImageRepository(imageRepository);
+	currentLevel.start();
+
 	var someObjs = JSON.parse(localStorage.getItem("uncleBob.savedGameObjects"), function(key, value){
-		if(value === "@currentLevel")
+		if(value === "@currentLevel"){
 			return currentLevel;
+		}
 		if(value instanceof Object && value.protoHack !== undefined){
 			if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
 			var obj = Object.create(window[value.protoHack].prototype);
@@ -151,8 +161,9 @@ function loadLevel(){
 	});
 
 	var someObj = JSON.parse(localStorage.getItem("uncleBob.savedLevel"), function(key, value){
-		if(value === "@currentLevel")
+		if(value === "@currentLevel"){
 			return currentLevel;
+		}
 		if(value instanceof Object && value.protoHack !== undefined){
 			if(typeof value.value == 'number') return someObjs[value.value];
 			if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
@@ -162,12 +173,6 @@ function loadLevel(){
 		}
 		return value;
 	});
-
-	if(currentLevel !== undefined) currentLevel.destroy();
-	currentLevel = window[someObj.moduleName];
-	currentLevel.setCtx(ctx);
-	currentLevel.setImageRepository(imageRepository);
-	currentLevel.start();
 
 	copyProperties(currentLevel, someObj);
 
@@ -186,7 +191,7 @@ function loadLevel(){
 function copyProperties(recipient, source){
 	for(var i in source){
 		if(!source.hasOwnProperty(i)) continue;
-		recipient[i] = source[i];
+		else recipient[i] = source[i];
 	}
 }
 

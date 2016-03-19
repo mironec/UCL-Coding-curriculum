@@ -147,6 +147,13 @@ Tree.prototype.isAlive = function(){
 	return this.alive;
 }
 
+function FarmingPatch(x,y){
+	GameObject.call(this,x,y);
+
+	this.image = new Image();
+	this.imageReady = false;
+}
+
 //Character Class, inherits GameObject
 function Character(name,x,y,parentLevel){
 	GameObject.call(this,x,y);
