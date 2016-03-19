@@ -515,6 +515,14 @@ Spellbook.prototype.saveText = function(){
 	this.functions[this.pointerTab] = new Function(str.trim());
 }
 
+Spellbook.prototype.getFunctionByName = function(name){
+	for(var i=0;i<this.tabs.length;i++){
+		if(name == this.tabs[i].name){
+			return this.functions[i];
+		}
+	}
+}
+
 Spellbook.prototype.draw = function(ctx){
 	ctx.save();
 	ctx.fillStyle = "rgba(0,0,0,0.3)";
