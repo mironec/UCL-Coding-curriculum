@@ -86,52 +86,67 @@ function init(){
 	}
 }
 
+function savingFunc(key, value){
+	if(key !== '' && value === currentLevel){
+		return '@currentLevel';
+	}
+	if(value instanceof Array){
+		return value;
+	}
+	if(value instanceof Object && key !== 'value' && value.constructor.name == "Order" && value.data !== undefined && value.data.callback !== undefined){
+		return {value: value, callback: value.data.callback.name, protoHack: value.constructor.name};
+	}
+	if(value instanceof Object && value.constructor.name === "HTMLImageElement"){
+		return {value: imageRepository.findKeyForImage(value), protoHack: value.constructor.name};
+	}
+	if(typeof value === 'object' && key !== 'value' && key !== ''){
+		return {value: value, protoHack: value.constructor.name};
+	}
+	return value;
+}
+
+function savingFunc2(key, value){
+	if(value instanceof Object && (value.constructor.name == "Tree" || value.constructor.name == "Character")){
+		for(var i = 0;i<currentLevel.gameObjects.length;i++){
+			if(currentLevel.gameObjects[i] === value)
+				return {value: i, protoHack: value.constructor.name};
+		}
+	}
+	return savingFunc(key, value);
+}
+
+function parsingFunc(key, value){
+	if(value === "@currentLevel"){
+		return currentLevel;
+	}
+	if(value instanceof Object && value.protoHack === 'Order' && value.callback !== undefined){
+		var obj = Object.create(window[value.protoHack].prototype);
+		copyProperties(obj, value.value);
+		obj.data.callback = currentLevel.spellbook.getFunctionByName(value.callback);
+		return obj;
+	}
+	if(value instanceof Object && value.protoHack !== undefined){
+		if(typeof value.value == 'number') return currentLevel.gameObjects[value.value];
+		if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
+		var obj = Object.create(window[value.protoHack].prototype);
+		copyProperties(obj, value.value);
+		return obj;
+	}
+	return value;
+}
+
 function saveLevel(){
 	localStorage.setItem("uncleBob.savedLevelName", currentLevel.moduleName);
+	localStorage.setItem("uncleBob.savedSpellbookTabs", JSON.stringify(currentLevel.spellbook.tabs, savingFunc));
 
 	var data = JSON.stringify(
-		{gameFocus: currentLevel.gameFocus,
-		done: currentLevel.done, tutorialText: currentLevel.tutorialText, persistTutorial: currentLevel.persistTutorial,
-		camera: currentLevel.camera, spellbookTabs: currentLevel.spellbook.tabs,
-		characters: currentLevel.characters, thingsToDraw: currentLevel.thingsToDraw,
-		map: currentLevel.map}
-		, function(key, value){
-		if(key !== '' && value === currentLevel){
-			return '@currentLevel';
-		}
-		if(value instanceof Array){
-			return value;
-		}
-		if(value instanceof Object && (value.constructor.name == "Tree" || value.constructor.name == "Character")){
-			for(var i = 0;i<currentLevel.gameObjects.length;i++){
-				if(currentLevel.gameObjects[i] === value)
-					return {value: i, protoHack: value.constructor.name};
-			}
-		}
-		if(value instanceof Object && value.constructor.name === "HTMLImageElement"){
-			return {value: imageRepository.findKeyForImage(value), protoHack: value.constructor.name};
-		}
-		if(typeof value === 'object' && key !== 'value' && key !== ''){
-			return {value: value, protoHack: value.constructor.name};
-		}
-		return value;
-	});
+		{gameFocus: currentLevel.gameFocus, done: currentLevel.done,
+		persistTutorial: currentLevel.persistTutorial, tutorialText: currentLevel.tutorialText,
+		camera: currentLevel.camera, characters: currentLevel.characters,
+		thingsToDraw: currentLevel.thingsToDraw, map: currentLevel.map}
+		, savingFunc2);
 
-	var data2 = JSON.stringify(currentLevel.gameObjects, function(key, value){
-		if(key !== '' && value === currentLevel){
-			return '@currentLevel';
-		}
-		if(value instanceof Array){
-			return value;
-		}
-		if(value instanceof Object && value.constructor.name === "HTMLImageElement"){
-			return {value: imageRepository.findKeyForImage(value), protoHack: value.constructor.name};
-		}
-		if(typeof value === 'object' && key !== 'value' && key !== ''){
-			return {value: value, protoHack: value.constructor.name};
-		}
-		return value;
-	});
+	var data2 = JSON.stringify(currentLevel.gameObjects, savingFunc);
 
 	localStorage.setItem("uncleBob.savedLevel", data);
 
@@ -147,43 +162,19 @@ function loadLevel(){
 	currentLevel.setImageRepository(imageRepository);
 	currentLevel.start();
 
-	var someObjs = JSON.parse(localStorage.getItem("uncleBob.savedGameObjects"), function(key, value){
-		if(value === "@currentLevel"){
-			return currentLevel;
-		}
-		if(value instanceof Object && value.protoHack !== undefined){
-			if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
-			var obj = Object.create(window[value.protoHack].prototype);
-			copyProperties(obj, value.value);
-			return obj;
-		}
-		return value;
-	});
-
-	var someObj = JSON.parse(localStorage.getItem("uncleBob.savedLevel"), function(key, value){
-		if(value === "@currentLevel"){
-			return currentLevel;
-		}
-		if(value instanceof Object && value.protoHack !== undefined){
-			if(typeof value.value == 'number') return someObjs[value.value];
-			if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
-			var obj = Object.create(window[value.protoHack].prototype);
-			copyProperties(obj, value.value);
-			return obj;
-		}
-		return value;
-	});
-
-	copyProperties(currentLevel, someObj);
-
-	currentLevel.spellbook.tabs = currentLevel.spellbookTabs;
-	delete currentLevel.spellbookTabs;
+	var spellbookTabs = JSON.parse(localStorage.getItem("uncleBob.savedSpellbookTabs"), parsingFunc);
+	currentLevel.spellbook.tabs = spellbookTabs;
 	for(var k = 0; k < currentLevel.spellbook.tabs.length; k++){
 		currentLevel.spellbook.pointerTab = k;
 		currentLevel.spellbook.saveText();
 	}
 
+	var someObjs = JSON.parse(localStorage.getItem("uncleBob.savedGameObjects"), parsingFunc);
 	currentLevel.gameObjects = someObjs;
+
+	var someObj = JSON.parse(localStorage.getItem("uncleBob.savedLevel"), parsingFunc);
+
+	copyProperties(currentLevel, someObj);
 
 	return someObj;
 }
