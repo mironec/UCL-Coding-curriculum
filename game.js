@@ -3,14 +3,17 @@ var ctx;
 
 var lastMainLoopTime;
 var lastSecondTime;
-var keysDown = {};
-var mouseButtonsDown = {};
+var keysDown;
+var mouseButtonsDown;
 
-var frames = 0;
-var fps = 0;
-var imageRepository = new ImageRepository();
+var frames;
+var fps;
+var imageRepository;
 var currentLevel;
 var doDraw, doLogic;
+
+var animationFrameHandle;
+var saveFunctionHandle;
 
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
@@ -79,6 +82,14 @@ function init(){
 		else {
 			resizeCanvas();
 			
+			imageRepository = new ImageRepository();
+			frames = 0;
+			fps = 0;
+			mouseButtonsDown = {};
+			keysDown = {};
+			destroy();
+			animationFrameHandle = undefined;
+			saveFunctionHandle = undefined;
 			imageRepository.loadImages(['bob','grass1','grass2','tree1','stump1'],['images/Bob.png','images/Grass1.png','images/Grass2.png','images/Tree1.png','images/Stump1.png'],
 			function(){postLoad();}  );
 			
@@ -151,7 +162,7 @@ function saveLevel(){
 	localStorage.setItem("uncleBob.savedLevel", data);
 
 	localStorage.setItem("uncleBob.savedGameObjects", data2);
-	setTimeout(saveLevel, 1000*15);
+	saveFunctionHandle = setTimeout(saveLevel, 1000*15);
 }
 
 function loadLevel(){
@@ -187,7 +198,10 @@ function copyProperties(recipient, source){
 }
 
 function postLoad(){
-	if(localStorage.getItem("uncleBob.savedLevel") !== undefined && localStorage.getItem("uncleBob.savedLevel") !== "") {
+	if(localStorage.getItem("uncleBob.savedLevel") !== undefined && localStorage.getItem("uncleBob.savedLevel") !== "" &&
+	   localStorage.getItem("uncleBob.savedGameObjects") !== undefined && localStorage.getItem("uncleBob.savedGameObjects") !== "" &&
+	   localStorage.getItem("uncleBob.savedSpellbookTabs") !== undefined && localStorage.getItem("uncleBob.savedSpellbookTabs") !== "" &&
+	   localStorage.getItem("uncleBob.savedLevelName") !== undefined && localStorage.getItem("uncleBob.savedLevelName") !== "") {
 		loadLevel();
 	}
 	else{
@@ -202,7 +216,7 @@ function postLoad(){
 	
 	mainLoop();
 
-	setTimeout(saveLevel, 1000*5);
+	saveFunctionHandle =  setTimeout(saveLevel, 1000*5);
 }
 
 function draw(delta){
@@ -234,8 +248,12 @@ var mainLoop = function(){
 
 	lastMainLoopTime = now;
 	
-	requestAnimationFrame(mainLoop);
+	animationFrameHandle = requestAnimationFrame(mainLoop);
+}
+
+var destroy = function(){
+	if(animationFrameHandle !== undefined) cancelAnimationFrame(animationFrameHandle);
+	if(saveFunctionHandle !== undefined) clearTimeout(saveFunctionHandle);
 }
 
 lastMainLoopTime = Date.now();
-init();
