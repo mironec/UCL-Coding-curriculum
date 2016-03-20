@@ -90,8 +90,12 @@ function init(){
 			destroy();
 			animationFrameHandle = undefined;
 			saveFunctionHandle = undefined;
-			imageRepository.loadImages(['bob','grass1','grass2','tree1','stump1'],['images/Bob.png','images/Grass1.png','images/Grass2.png','images/Tree1.png','images/Stump1.png'],
-			function(){postLoad();}  );
+			imageRepository.loadImages([
+				'bob','grass1','grass2','tree1','stump1','redberry1','redberry2','redberry3','redberry4','redberry5'
+				],[
+				'images/Bob.png','images/Grass1.png','images/Grass2.png','images/Tree1.png','images/Stump1.png',
+				'images/FarmingPatch1.png','images/FarmingPatch2.png','images/FarmingPatch3.png','images/FarmingPatch4.png','images/FarmingPatch5.png'
+				], function(){postLoad();});
 			
 		}
 	}

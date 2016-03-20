@@ -25,6 +25,11 @@ level1.afterStart = function(){
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
 	this.thingsToDraw.push(tree1);
 	this.gameObjects.push(tree1);
+
+	PlantType.Redberry.lookUpImages(this.imageRepository);
+	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
+	this.thingsToDraw.push(redberry);
+	this.gameObjects.push(redberry);
 	
 	this.showTutorial("In the beginning of time, Bob was there.\n\n<Press enter to continue>", false);
 	this.done = 0;

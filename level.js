@@ -288,7 +288,10 @@ Level.prototype.draw = function(delta){
 }
 
 Level.prototype.update = function(delta){
-	this.characters.update(delta);
+	for(var i = 0; i <  this.gameObjects.length; i++){
+		this.gameObjects[i].update(delta);
+	}
+
 	this.afterUpdate(delta);
 }
 

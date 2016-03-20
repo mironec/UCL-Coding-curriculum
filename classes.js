@@ -147,12 +147,70 @@ Tree.prototype.isAlive = function(){
 	return this.alive;
 }
 
-function FarmingPatch(x,y){
+function FarmingPatch(x,y,plantType){
 	GameObject.call(this,x,y);
 
-	this.image = new Image();
-	this.imageReady = false;
+	this.growthStage = 0;
+	this.timeInThisGrowthStage = 0;
+	this.plantType = plantType;
+	this.width = plantType.width || 64;
+	this.height = plantType.height || 64;
+	this.image = plantType.growthStages[0].image;
+	if(this.image !== undefined) this.imageReady = true;
 }
+
+FarmingPatch.prototype = Object.create(GameObject.prototype);
+FarmingPatch.prototype.constructor = FarmingPatch;
+
+FarmingPatch.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.translate(this.x, this.y);
+	if(this.imageReady)
+		ctx.drawImage(this.image,0,0);
+	ctx.restore();
+}
+
+FarmingPatch.prototype.update = function(delta){
+	this.timeInThisGrowthStage += delta;
+	if(this.advancesToNextGrowthStage(delta)){
+		this.growthStage++;
+		if(this.plantType.growthStages[this.growthStage].image !== undefined) this.image = this.plantType.growthStages[this.growthStage].image;
+		this.timeInThisGrowthStage -= this.plantType.growthStages[this.growthStage-1].time;
+	}
+}
+
+FarmingPatch.prototype.advancesToNextGrowthStage = function(delta){
+	return this.plantType.advancesToNextGrowthStage(delta, this);
+}
+
+function PlantType(name){
+	this.name = name;
+	this.growthStages = [];
+}
+
+PlantType.prototype.lookUpImages = function(imageRepository){
+	for(var i = 0; i < this.growthStages.length ; i++){
+		var gS = this.growthStages[i];
+		if(gS.imageID !== undefined){
+			gS.image = imageRepository.getImage(gS.imageID);
+			delete gS.imageID;
+		}
+	}
+	return this;
+}
+
+PlantType.prototype.addGrowthStage = function(newGrowthStage){
+	this.growthStages.push(newGrowthStage);
+	return this;
+}
+
+PlantType.prototype.advancesToNextGrowthStage = function(delta, patch){
+	return (patch.growthStage < this.growthStages.length - 1) && (patch.timeInThisGrowthStage >= this.growthStages[patch.growthStage+1].time);
+}
+
+PlantType.Redberry = new PlantType("Redberry")
+.addGrowthStage({time:5000,imageID:'redberry1'}).addGrowthStage({time:5000,imageID:'redberry2'}).addGrowthStage({time:5000,imageID:'redberry3'})
+.addGrowthStage({time:5000,imageID:'redberry4'}).addGrowthStage({time:5000,imageID:'redberry5'});
 
 //Character Class, inherits GameObject
 function Character(name,x,y,parentLevel){
@@ -343,12 +401,6 @@ CharacterList.prototype.say = function(s){
 CharacterList.prototype.draw = function(ctx){
 	for(var i=0;i<this.arr.length;i++){
 		this.arr[i].draw(ctx);
-	}
-}
-
-CharacterList.prototype.update = function(delta){
-	for(var i=0;i<this.arr.length;i++){
-		this.arr[i].update(delta);
 	}
 }
 
