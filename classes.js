@@ -181,10 +181,19 @@ FarmingPatch.prototype.draw = function(ctx){
 FarmingPatch.prototype.update = function(delta){
 	this.timeInThisGrowthStage += delta;
 	if(this.advancesToNextGrowthStage(delta)){
-		this.growthStage++;
-		if(this.plantType.growthStages[this.growthStage].image !== undefined) this.image = this.plantType.growthStages[this.growthStage].image;
+		this.setGrowthStage(this.growthStage + 1);
 		this.timeInThisGrowthStage -= this.plantType.growthStages[this.growthStage-1].time;
 	}
+}
+
+FarmingPatch.prototype.setGrowthStage = function(stage, resetProgress){
+	this.growthStage = stage;
+	if(this.plantType.growthStages[this.growthStage].image !== undefined) this.image = this.plantType.growthStages[this.growthStage].image;
+	if(resetProgress !== undefined && resetProgress == true) this.timeInThisGrowthStage = 0;
+}
+
+FarmingPatch.prototype.harvest = function(){
+	return this.plantType.harvest(this);
 }
 
 FarmingPatch.prototype.advancesToNextGrowthStage = function(delta){
@@ -212,8 +221,17 @@ PlantType.prototype.addGrowthStage = function(newGrowthStage){
 	return this;
 }
 
+PlantType.prototype.setHarvestFunction = function(f){
+	this.harvest = f;
+	return this;
+}
+
 PlantType.prototype.advancesToNextGrowthStage = function(delta, patch){
 	return (patch.growthStage < this.growthStages.length - 1) && (patch.timeInThisGrowthStage >= this.growthStages[patch.growthStage+1].time);
+}
+
+PlantType.prototype.harvest = function(farmingPatch){
+	return [];
 }
 
 PlantType.lookUpAllImages = function(imageRepository){
@@ -227,7 +245,15 @@ PlantType.lookUpAllImages = function(imageRepository){
 
 PlantType.Redberry = new PlantType("Redberry")
 .addGrowthStage({time:5000,imageID:'redberry1'}).addGrowthStage({time:5000,imageID:'redberry2'}).addGrowthStage({time:5000,imageID:'redberry3'})
-.addGrowthStage({time:5000,imageID:'redberry4'}).addGrowthStage({time:5000,imageID:'redberry5'});
+.addGrowthStage({time:5000,imageID:'redberry4'}).addGrowthStage({time:5000,imageID:'redberry5'}).setHarvestFunction(
+		function(farmingPatch){
+			if(farmingPatch.growthStage == 4){
+				farmingPatch.setGrowthStage(farmingPatch.growthStage-1, true);
+				return [new Item(ItemType.RedberrySeeds).setQuantity(Math.floor(Math.random()*3)+3)];
+			}
+			else return [];
+		}
+	);
 
 //Character Class, inherits GameObject
 function Character(name,x,y,parentLevel){
@@ -289,6 +315,10 @@ Character.prototype.chopNearestTree = function(){
 	this.chopTree(this.getNearestTree());
 }
 
+Character.prototype.harvest = function(callback){
+	this.orders.push(new Order("harvest",{callback: callback}));
+}
+
 Character.prototype.say = function(s){
 	this.sayText = ""+s;
 	this.sayTime = 5000;
@@ -331,8 +361,40 @@ Character.prototype.update = function(delta){
 			case "chop":
 				var tTree = curOrder.getData().tree;
 				tTree.fall();
-				this.orders.shift();
+				this.completeCurrentOrder();
 				break;
+			case "harvest":
+				var gO = this.parentLevel.gameObjects;
+
+				for(var i = 0;i < gO.length;i++){
+					if(gO[i] instanceof FarmingPatch && BoundingBoxClip(this, gO[i])){
+						this.addToInventory( gO[i].harvest() );
+					}
+				}
+				this.completeCurrentOrder();
+				break;
+		}
+	}
+}
+
+Character.prototype.addToInventory = function(obj){
+	if(obj instanceof Array){
+		for(var i = 0;i<obj.length;i++){
+			this.addToInventory(obj[i]);
+		}
+		return;
+	}
+	if(obj instanceof Item){
+		if(!obj.isStackable())
+			this.inventory.push(obj);
+		else{
+			for(var i = 0;i < this.inventory.length;i++){
+				if(this.inventory[i].itemType == obj.itemType){
+					this.inventory[i].quantity += obj.quantity;
+					return;
+				}
+			}
+			this.inventory.push(obj);
 		}
 	}
 }
@@ -353,6 +415,48 @@ Character.prototype.draw = function(ctx){
 	}
 	ctx.restore();
 }
+
+function Item(itemType){
+	this.itemType = itemType;
+	this.quantity = 1;
+}
+
+Item.prototype.setQuantity = function(quantity){
+	this.quantity = quantity;
+	return this;
+}
+
+Item.prototype.isStackable = function(){
+	return this.itemType.isStackable();
+}
+
+function ItemType(itemID){
+	this.itemID = itemID;
+	this.itemName = itemID;
+	this.weight = 0;
+	this.stacks = false;
+}
+
+ItemType.prototype.setName = function(name){
+	this.itemName = name;
+	return this;
+}
+
+ItemType.prototype.setWeight = function(weight){
+	this.weight = weight;
+	return this;
+}
+
+ItemType.prototype.setStacks = function(stacks){
+	this.stacks = stacks;
+	return this;
+}
+
+ItemType.prototype.isStackable = function(){
+	return this.stacks;
+}
+
+ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds").setWeight(1/8/8).setStacks(true);
 
 //Order Class
 function Order(name, data){
@@ -418,6 +522,10 @@ CharacterList.prototype.move = function(x,y, callback){
 		if(callback !== undefined) this.arr[i].move(x,y,callback);
 		else this.arr[i].move(x,y);
 	}
+}
+
+CharacterList.prototype.harvest = function(callback){
+	return this.forEach( function(){this.harvest(callback);} );
 }
 
 CharacterList.prototype.say = function(s){

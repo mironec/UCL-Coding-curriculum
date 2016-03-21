@@ -399,6 +399,9 @@ Level.prototype.savingFunc = function(key, value){
 	if(value instanceof Object && value.constructor.name === "PlantType"){
 		return {value: value.name, protoHack: value.constructor.name};
 	}
+	if(value instanceof Object && value.constructor.name === "ItemType"){
+		return {value: value.itemID, protoHack: value.constructor.name};
+	}
 	if(typeof value === 'object' && key !== 'value' && key !== ''){
 		return {value: value, protoHack: value.constructor.name};
 	}
@@ -429,6 +432,7 @@ Level.prototype.parsingFunc = function(key, value){
 		if(typeof value.value == 'number') return this.gameObjects[value.value];
 		if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
 		if(value.protoHack === "PlantType") return PlantType[value.value];
+		if(value.protoHack === "ItemType") return ItemType[value.value];
 		var obj = Object.create(window[value.protoHack].prototype);
 		copyProperties(obj, value.value);
 		return obj;
