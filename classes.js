@@ -114,6 +114,14 @@ Map.prototype.parseMap = function(a){
 	this.ensureSize(a.length,a[0].length);
 }
 
+Map.prototype.getPixelWidth = function(){
+	return this.numTilesX*this.tileWidth;
+}
+
+Map.prototype.getPixelHeight = function(){
+	return this.numTilesY*this.tileHeight;
+}
+
 //Tree Class, inherits GameObject
 function Tree(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
@@ -298,11 +306,18 @@ Character.prototype.update = function(delta){
 				var desireY = moveY - this.y;
 				
 				var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-				if(desireDist == 0) {if(curOrder.getData().callback !== undefined) curOrder.getData().callback.apply(); this.orders.shift(); return;}
+				if(desireDist == 0) {this.completeCurrentOrder(); return;}
 				var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
 				
 				this.x += realDist/desireDist * desireX;
 				this.y += realDist/desireDist * desireY;
+
+				var m = this.parentLevel.map; var b = false;
+				if(this.x + this.width > m.getPixelWidth() + m.beginX)  {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
+				if(this.x < m.beginX)                      {this.x = m.beginX; b = true;}
+				if(this.y + this.height > m.getPixelHeight() + m.beginY) {this.y = m.getPixelHeight() + m.beginY - this.height; b = true;}
+				if(this.y < m.beginY)                      {this.y = m.beginY; b = true;}
+				if(b) { this.completeCurrentOrder(); return; }
 				break;
 			case "chop":
 				var tTree = curOrder.getData().tree;
@@ -311,6 +326,10 @@ Character.prototype.update = function(delta){
 				break;
 		}
 	}
+}
+
+Character.prototype.completeCurrentOrder = function(){
+	if(this.orders[0].getData().callback !== undefined) this.orders[0].getData().callback.apply(); this.orders.shift();
 }
 
 Character.prototype.draw = function(ctx){

@@ -13,17 +13,17 @@ level1.afterStart = function(){
             //in order to modify the ratio of each grass, i will first store the random variable and assign a if statement to push the type of grass variation
             var rndgen = Math.floor(pseudoRand*60 + 1);
             if(rndgen < 52){
-                a.push({type: "grass", variation: 6}); 
+                a.push({type: "grass", variation: 6});
             }else if((rndgen > 51) && (rndgen < 55)){
-                a.push({type: "grass", variation: 3}); 
+                a.push({type: "grass", variation: 3});
             }else if((rndgen > 54) && (rndgen < 58)){
-                a.push({type: "grass", variation: 2}); 
+                a.push({type: "grass", variation: 2});
             }else if((rndgen > 57) && (rndgen < 59)){
-                a.push({type: "grass", variation: 1}); 
+                a.push({type: "grass", variation: 1});
             }else if((rndgen > 58) && (rndgen < 60)){
-                a.push({type: "grass", variation: 5}); 
+                a.push({type: "grass", variation: 5});
             }else if((rndgen > 59) && (rndgen < 61)){
-                a.push({type: "grass", variation: 4}); 
+                a.push({type: "grass", variation: 4});
             }
 		}
 		b.push(a);

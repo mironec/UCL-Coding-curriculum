@@ -78,6 +78,8 @@ Level.prototype.start = function(){
 		parentLevel.onMouseUp(e.pageX-canvas.offsetLeft, e.pageY-canvas.offsetTop, e.button);
 	}, false);
 	
+	window.addEventListener("resize", this.onResizeE = function(e){parentLevel.moveCamera(0,0);}, false);
+
 	this.afterStart();
 }
 
@@ -89,6 +91,8 @@ Level.prototype.destroy = function(){
 	window.removeEventListener("mousedown", this.onMouseDownE);
 	window.removeEventListener("mousemove", this.onMouseMoveE);
 	window.removeEventListener("mouseup", this.onMouseUpE);
+
+	window.removeEventListener("resize", this.onResizeE);
 }
 
 Level.prototype.afterStart = function(){
@@ -219,16 +223,23 @@ Level.prototype.onMouseDown = function(x, y, b){
 	if(this.gameFocus == this.FOCUS_SPELLBOOK){this.spellbook.mouseClick(x,y-canvas.height+200);}
 }
 
-Level.prototype.onMouseUp = function(x, y, b){
+Level.prototype.moveCamera = function(x, y){
 	this.camera.x += this.startClick.x-x;
+	if(this.camera.x > this.map.getPixelWidth() + this.map.beginX - canvas.width/2) this.camera.x = this.map.getPixelWidth() + this.map.beginX - canvas.width/2;
+	if(this.camera.x < this.map.beginX + canvas.width/2) this.camera.x = this.map.beginX + canvas.width/2;
 	this.camera.y += this.startClick.y-y;
+	if(this.camera.y > this.map.getPixelHeight() + this.map.beginY - canvas.height/2) this.camera.y = this.map.getPixelHeight() + this.map.beginY - canvas.height/2;
+	if(this.camera.y < this.map.beginY + canvas.height/2) this.camera.y = this.map.beginY + canvas.height/2;
+}
+
+Level.prototype.onMouseUp = function(x, y, b){
+	this.moveCamera(x,y);
 	delete this.mouseButtonsDown[b];
 }
 
 Level.prototype.onMouseMove = function(x, y, b){
 	if(!(b in this.mouseButtonsDown)) return;
-	this.camera.x += this.startClick.x-x;
-	this.camera.y += this.startClick.y-y;
+	this.moveCamera(x,y);
 	this.startClick.x=x;
 	this.startClick.y=y;
 }
