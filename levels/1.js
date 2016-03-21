@@ -40,7 +40,7 @@ level1.afterStart = function(){
 	this.thingsToDraw.push(tree1);
 	this.gameObjects.push(tree1);
 
-	PlantType.Redberry.lookUpImages(this.imageRepository);
+	PlantType.lookUpAllImages(this.imageRepository);
 	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
 	this.thingsToDraw.push(redberry);
 	this.gameObjects.push(redberry);

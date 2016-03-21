@@ -216,6 +216,15 @@ PlantType.prototype.advancesToNextGrowthStage = function(delta, patch){
 	return (patch.growthStage < this.growthStages.length - 1) && (patch.timeInThisGrowthStage >= this.growthStages[patch.growthStage+1].time);
 }
 
+PlantType.lookUpAllImages = function(imageRepository){
+	for(var i in PlantType){
+		if(!PlantType.hasOwnProperty(i)) continue;
+		if(PlantType[i] instanceof PlantType){
+			PlantType[i].lookUpImages(imageRepository);
+		}
+	}
+}
+
 PlantType.Redberry = new PlantType("Redberry")
 .addGrowthStage({time:5000,imageID:'redberry1'}).addGrowthStage({time:5000,imageID:'redberry2'}).addGrowthStage({time:5000,imageID:'redberry3'})
 .addGrowthStage({time:5000,imageID:'redberry4'}).addGrowthStage({time:5000,imageID:'redberry5'});

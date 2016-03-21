@@ -403,7 +403,7 @@ Level.prototype.savingFunc = function(key, value){
 }
 
 Level.prototype.savingFunc2 = function(key, value){
-	if(value instanceof Object && this.gameObjects.includes(value) /*(value.constructor.name == "Tree" || value.constructor.name == "Character")*/){
+	if(value instanceof Object && this.gameObjects.includes(value)){
 		for(var i = 0;i<this.gameObjects.length;i++){
 			if(this.gameObjects[i] === value)
 				return {value: i, protoHack: value.constructor.name};
@@ -450,7 +450,8 @@ Level.prototype.save = function(){
 
 	localStorage.setItem("uncleBob.savedGameObjects", data2);
 
-	saveFunctionHandle = setTimeout(function(){parentLevel.save}, 1000*15);
+	console.log("Game has been saved.");
+	saveFunctionHandle = setTimeout(function(){parentLevel.save();}, 1000*15);
 }
 
 Level.prototype.load = function(){

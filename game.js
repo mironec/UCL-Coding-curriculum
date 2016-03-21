@@ -125,7 +125,7 @@ function postLoad(){
 	
 	mainLoop();
 
-	saveFunctionHandle =  setTimeout(function(){currentLevel.save}, 1000*5);
+	saveFunctionHandle =  setTimeout(function(){currentLevel.save();}, 1000*5);
 }
 
 function draw(delta){
