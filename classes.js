@@ -154,7 +154,99 @@ Tree.prototype.fall = function(){
 Tree.prototype.isAlive = function(){
 	return this.alive;
 }
+//Building Class, inherits GameObject 
+function BuildingSite(x, y, buildType){
+    GameObject.call(this, x, y);
+    
+    this.buildStage = 0; 
+    this.timeInThisBuildStage = 0;
+    this.buildType = buildType;
+    this.width = 128;
+    this.heigh = 128; 
+    this.image = buildType.buildStages[0].image;
+    if(this.image !== undefined) this.imageReady = true;
+}
 
+BuildingSite.prototype = Object.create(GameObject.prototype);
+BuildingSite.prototype.constructor = BuildingSite;
+
+BuildingSite.prototype.draw = function(ctx){
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    if(this.imageReady)
+        ctx.drawImage(this.image, 0,0);
+    ctx.restore();
+}
+
+BuildingSite.prototype.update = function(delta){
+    this.timeInThisBuildStage += delta;
+    if(this.advancesToNextBuildStage(delta)){
+        this.setBuildStage(this.buildStage + 1);
+        this.timeInThisBuildStage -=
+        this.buildType.buildStages[this.buildStage-1].time;
+    }
+}
+
+BuildingSite.prototype.setBuildStage = function(stage, resetProgress){
+	this.buildStage = stage;
+	if(this.buildType.buildStages[this.buildStage].image !== undefined) this.image = this.buildType.buildStages[this.buildStage].image;
+	if(resetProgress !== undefined && resetProgress == true) this.timeInThisBuildStage = 0;
+}
+
+
+BuildingSite.prototype.advancesToNextBuildStage = function(delta){
+	return this.buildType.advancesToNextBuildStage(delta, this);
+}
+
+function buildType(name){
+	this.name = name;
+	this.buildStages = [];
+}
+
+buildType.prototype.lookUpImages = function(imageRepository){
+	for(var i = 0; i < this.buildStages.length ; i++){
+		//bS for build stage
+        var bS = this.buildStages[i];
+		if(bS.imageID !== undefined){
+			bS.image = imageRepository.getImage(bS.imageID);
+			delete bS.imageID;
+		}
+	}
+	return this;
+}
+
+buildType.prototype.addBuildStage = function(newBuildStage){
+	this.buildStages.push(newBuildStage);
+	return this;
+}
+
+buildType.prototype.advancesToNextBuildStage = function(delta, site){
+	return (site.buildStage < this.buildStages.length - 1) && (site.timeInThisBuildStage >= this.buildStages[site.buildStage+1].time);
+}
+
+
+buildType.lookUpAllImages = function(imageRepository){
+	for(var i in buildType){
+		if(!buildType.hasOwnProperty(i)) continue;
+		if(buildType[i] instanceof buildType){
+			buildType[i].lookUpImages(imageRepository);
+		}
+	}
+}
+//House Bottom Left
+buildType.HouseBL = new buildType("HouseBL")
+.addBuildStage({time:5000,imageID:'HouseBL1'}).addBuildStage({time:5000,imageID:'HouseBL2'}).addBuildStage({time:5000,imageID:'HouseBL3'});
+//House Bottom Right
+buildType.HouseBR = new buildType("HouseBR")
+.addBuildStage({time:5000,imageID:'HouseBR1'}).addBuildStage({time:5000,imageID:'HouseBR2'}).addBuildStage({time:5000,imageID:'HouseBR3'});
+//House Top Left
+buildType.HouseTL = new buildType("HouseTL")
+.addBuildStage({time:5000,imageID:'HouseTL1'}).addBuildStage({time:5000,imageID:'HouseTL2'}).addBuildStage({time:5000,imageID:'HouseTL3'});
+//House Top Right
+buildType.HouseTR = new buildType("HouseTR")
+.addBuildStage({time:5000,imageID:'HouseTR1'}).addBuildStage({time:5000,imageID:'HouseTR2'}).addBuildStage({time:5000,imageID:'HouseTR3'});
+
+//End of building class and start of Farming Patch
 function FarmingPatch(x,y,plantType){
 	GameObject.call(this,x,y);
 

@@ -44,7 +44,22 @@ level1.afterStart = function(){
 	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
 	this.thingsToDraw.push(redberry);
 	this.gameObjects.push(redberry);
-	
+    
+    //building a house example
+    buildType.lookUpAllImages(this.imageRepository);
+	var houseBL = new BuildingSite(-256, -64, buildType.HouseBL);
+    var houseBR = new BuildingSite(houseBL.x+64, houseBL.y, buildType.HouseBR);
+    var houseTL = new BuildingSite(houseBL.x, houseBL.y-64, buildType.HouseTL);
+    var houseTR = new BuildingSite(houseBL.x+64, houseBL.y-64, buildType.HouseTR)
+    this.thingsToDraw.push(houseBL);
+    this.gameObjects.push(houseBL);
+    this.thingsToDraw.push(houseBR);
+    this.gameObjects.push(houseBR);
+    this.thingsToDraw.push(houseTL);
+    this.gameObjects.push(houseTL);
+    this.thingsToDraw.push(houseTR);
+    this.gameObjects.push(houseTR);
+    
 	this.showTutorial("In the beginning of time, Bob was there.\n\n<Press enter to continue>", false);
 	this.done = 0;
 }
