@@ -456,7 +456,7 @@ ItemType.prototype.isStackable = function(){
 	return this.stacks;
 }
 
-ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds").setWeight(1/8/8).setStacks(true);
+ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds").setWeight(1/8/8/8).setStacks(true);
 
 //Order Class
 function Order(name, data){
