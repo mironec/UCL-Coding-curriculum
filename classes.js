@@ -319,9 +319,21 @@ Character.prototype.harvest = function(callback){
 	this.orders.push(new Order("harvest",{callback: callback}));
 }
 
-Character.prototype.say = function(s){
+Character.prototype.say = function(s,t){
+	if(s instanceof Function){
+		var data = s.apply(this);
+		if (data == this.inventory){
+			s = "My inventory contains: ";
+			for(var i=0;i<this.inventory.length;i++){
+				s += this.inventory[i].getName();
+				if(this.inventory[i].quantity != 1) s += " x"+this.inventory[i].quantity;
+				if(i != this.inventory.length-1) s += ", ";
+			}
+		}
+	}
 	this.sayText = ""+s;
-	this.sayTime = 5000;
+	this.sayTime = t || 5;
+	this.sayTime *= 1000;
 }
 
 Character.prototype.update = function(delta){
@@ -426,6 +438,10 @@ Item.prototype.setQuantity = function(quantity){
 	return this;
 }
 
+Item.prototype.getName = function(){
+	return this.itemType.itemName;
+}
+
 Item.prototype.isStackable = function(){
 	return this.itemType.isStackable();
 }
@@ -528,10 +544,8 @@ CharacterList.prototype.harvest = function(callback){
 	return this.forEach( function(){this.harvest(callback);} );
 }
 
-CharacterList.prototype.say = function(s){
-	for(var i=0;i<this.arr.length;i++){
-		this.arr[i].say(s);
-	}
+CharacterList.prototype.say = function(s, t){
+	this.forEach(function(){this.say(s,t);});
 }
 
 CharacterList.prototype.draw = function(ctx){
