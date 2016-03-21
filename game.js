@@ -91,9 +91,9 @@ function init(){
 			animationFrameHandle = undefined;
 			saveFunctionHandle = undefined;
 			imageRepository.loadImages([
-				'bob','grass1','grass2','tree1','stump1','redberry1','redberry2','redberry3','redberry4','redberry5'
+				'bob','grass1','grass2','grass3','grass4','grass5','grass6','tree1','stump1','redberry1','redberry2','redberry3','redberry4','redberry5'
 				],[
-				'images/Bob.png','images/Grass1.png','images/Grass2.png','images/Tree1.png','images/Stump1.png',
+				'images/Bob.png','images/Grass1.png','images/Grass2.png','images/Grass3.png','images/Grass4.png','images/Grass5.png','images/Grass6.png','images/Tree1.png','images/Stump1.png',
 				'images/FarmingPatch1.png','images/FarmingPatch2.png','images/FarmingPatch3.png','images/FarmingPatch4.png','images/FarmingPatch5.png'
 				], function(){postLoad();});
 			
