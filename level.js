@@ -247,6 +247,8 @@ Level.prototype.onMouseMove = function(x, y, b){
 Level.prototype.draw = function(delta){
 	var c = this.ctx;
 	
+	this.thingsToDraw.sort(function(a,b){return a.y-b.y});
+
 	c.fillStyle = "#000000";
 	c.fillRect(0,0,canvas.width,canvas.height);
 	c.save();
