@@ -232,7 +232,7 @@ function Character(name,x,y,parentLevel){
 	this.moveSpeed = 100;
 	this.sayText = "";
 	this.sayTime = 0;
-	this.image = new Image();
+	this.inventory = [];
 }
 
 Character.prototype = Object.create(GameObject.prototype);
@@ -313,10 +313,10 @@ Character.prototype.update = function(delta){
 				this.y += realDist/desireDist * desireY;
 
 				var m = this.parentLevel.map; var b = false;
-				if(this.x + this.width > m.getPixelWidth() + m.beginX)  {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
-				if(this.x < m.beginX)                      {this.x = m.beginX; b = true;}
+				if(this.x + this.width > m.getPixelWidth() + m.beginX)   {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
+				if(this.x < m.beginX)                                    {this.x = m.beginX; b = true;}
 				if(this.y + this.height > m.getPixelHeight() + m.beginY) {this.y = m.getPixelHeight() + m.beginY - this.height; b = true;}
-				if(this.y < m.beginY)                      {this.y = m.beginY; b = true;}
+				if(this.y < m.beginY)                                    {this.y = m.beginY; b = true;}
 				if(b) { this.completeCurrentOrder(); return; }
 				break;
 			case "chop":

@@ -382,3 +382,92 @@ Level.prototype.getNearestTreeTo = function(character){
 	
 	return closestTree;
 }
+
+Level.prototype.savingFunc = function(key, value){
+	if(key !== '' && value === this){
+		return '@currentLevel';
+	}
+	if(value instanceof Array){
+		return value;
+	}
+	if(value instanceof Object && key !== 'value' && value.constructor.name == "Order" && value.data !== undefined && value.data.callback !== undefined){
+		return {value: value, callback: value.data.callback.name, protoHack: value.constructor.name};
+	}
+	if(value instanceof Object && value.constructor.name === "HTMLImageElement"){
+		return {value: imageRepository.findKeyForImage(value), protoHack: value.constructor.name};
+	}
+	if(typeof value === 'object' && key !== 'value' && key !== ''){
+		return {value: value, protoHack: value.constructor.name};
+	}
+	return value;
+}
+
+Level.prototype.savingFunc2 = function(key, value){
+	if(value instanceof Object && this.gameObjects.includes(value) /*(value.constructor.name == "Tree" || value.constructor.name == "Character")*/){
+		for(var i = 0;i<this.gameObjects.length;i++){
+			if(this.gameObjects[i] === value)
+				return {value: i, protoHack: value.constructor.name};
+		}
+	}
+	return this.savingFunc(key, value);
+}
+
+Level.prototype.parsingFunc = function(key, value){
+	if(value === "@currentLevel"){
+		return this;
+	}
+	if(value instanceof Object && value.protoHack === 'Order' && value.callback !== undefined){
+		var obj = Object.create(window[value.protoHack].prototype);
+		copyProperties(obj, value.value);
+		obj.data.callback = this.spellbook.getFunctionByName(value.callback);
+		return obj;
+	}
+	if(value instanceof Object && value.protoHack !== undefined){
+		if(typeof value.value == 'number') return this.gameObjects[value.value];
+		if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
+		var obj = Object.create(window[value.protoHack].prototype);
+		copyProperties(obj, value.value);
+		return obj;
+	}
+	return value;
+}
+
+Level.prototype.save = function(){
+	localStorage.setItem("uncleBob.savedLevelName", this.moduleName);
+	var parentLevel = this;
+	localStorage.setItem("uncleBob.savedSpellbookTabs", JSON.stringify(this.spellbook.tabs, function(key,value){ return parentLevel.savingFunc(key,value);} ));
+
+	var data = JSON.stringify(
+		{gameFocus: this.gameFocus, done: this.done,
+		persistTutorial: this.persistTutorial, tutorialText: this.tutorialText,
+		camera: this.camera, characters: this.characters,
+		thingsToDraw: this.thingsToDraw, map: this.map}
+		, function(key,value){ return parentLevel.savingFunc2(key,value);} );
+
+	var data2 = JSON.stringify(this.gameObjects, function(key,value){ return parentLevel.savingFunc(key,value);} );
+
+	localStorage.setItem("uncleBob.savedLevel", data);
+
+	localStorage.setItem("uncleBob.savedGameObjects", data2);
+
+	saveFunctionHandle = setTimeout(function(){parentLevel.save}, 1000*15);
+}
+
+Level.prototype.load = function(){
+	var parentLevel = this;
+	var spellbookTabs = JSON.parse(localStorage.getItem("uncleBob.savedSpellbookTabs"), function(key,value){ return parentLevel.parsingFunc(key,value);} );
+	this.spellbook.tabs = spellbookTabs;
+	for(var k = 0; k < this.spellbook.tabs.length; k++){
+		this.spellbook.pointerTab = k;
+		this.spellbook.saveText();
+	}
+
+	var someObjs = JSON.parse(localStorage.getItem("uncleBob.savedGameObjects"), function(key,value){ return parentLevel.parsingFunc(key,value);} );
+	this.gameObjects = someObjs;
+
+	var someObj = JSON.parse(localStorage.getItem("uncleBob.savedLevel"), function(key,value){ return parentLevel.parsingFunc(key,value);} );
+
+	copyProperties(this, someObj);
+
+	return someObj;
+}
