@@ -160,11 +160,11 @@ Tree.prototype.isAlive = function(){
 function BuildingSite(x, y, buildType){
     GameObject.call(this, x, y);
     
-    this.buildStage = 0; 
+    this.buildStage = 0;
     this.timeInThisBuildStage = 0;
     this.buildType = buildType;
     this.width = 128;
-    this.heigh = 128; 
+    this.height = 128;
     this.image = buildType.buildStages[0].image;
     if(this.image !== undefined) this.imageReady = true;
 }
@@ -184,8 +184,7 @@ BuildingSite.prototype.update = function(delta){
     this.timeInThisBuildStage += delta;
     if(this.advancesToNextBuildStage(delta)){
         this.setBuildStage(this.buildStage + 1);
-        this.timeInThisBuildStage -=
-        this.buildType.buildStages[this.buildStage-1].time;
+        this.timeInThisBuildStage -= this.buildType.buildStages[this.buildStage-1].time;
     }
 }
 
