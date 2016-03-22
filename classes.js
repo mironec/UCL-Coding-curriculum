@@ -164,6 +164,28 @@ ItemPile.prototype.update = function(delta){
 	if(this.items.length == 0) return {remove:true};
 }
 
+ItemPile.prototype.addItems = function(obj){
+	if(obj instanceof Array){
+		for(var i = 0;i<obj.length;i++){
+			this.addItems(obj[i]);
+		}
+		return;
+	}
+	if(obj instanceof Item){
+		if(!obj.isStackable())
+			this.items.push(obj);
+		else{
+			for(var i = 0;i < this.items.length;i++){
+				if(this.items[i].itemType == obj.itemType){
+					this.items[i].quantity += obj.quantity;
+					return;
+				}
+			}
+			this.items.push(obj);
+		}
+	}
+}
+
 //Tree Class, inherits GameObject
 function Tree(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
@@ -175,6 +197,7 @@ function Tree(x,y,aliveImage,deadImage){
 	this.image = this.aliveImage;
 	this.imageReady = true;
 	this.alive = true;
+	this.health = 20;
 }
 
 Tree.prototype = Object.create(GameObject.prototype);
@@ -186,6 +209,19 @@ Tree.prototype.draw = function(ctx){
 	if(this.imageReady)
 		ctx.drawImage(this.image,0,0);
 	ctx.restore();
+}
+
+Tree.prototype.chop = function(delta){
+	this.health -= delta/1000;
+	if(this.health <= 0) {
+		this.health = 0;
+		this.fall();
+		return {remove:true,items:[]};
+	}
+
+	if(Math.random()*1000/delta < 1)
+		return {remove:false,items:[new Item(ItemType.Log)]};
+	return{remove:false,items:[]}
 }
 
 Tree.prototype.fall = function(){
@@ -525,8 +561,9 @@ Character.prototype.update = function(delta){
 				break;
 			case "chop":
 				var tTree = curOrder.getData().tree;
-				tTree.fall();
-				this.completeCurrentOrder();
+				var response = tTree.chop(delta);
+				this.addToInventory(response.items);
+				if(response.remove !== undefined && response.remove) this.completeCurrentOrder();
 				break;
 			case "harvest":
 				var gO = this.parentLevel.gameObjects;
@@ -698,8 +735,17 @@ ItemType.prototype.handleDrop = function(item, character, numberToDrop){
 	var gO = character.parentLevel.gameObjects;
 
 	for(var i = 0;i < gO.length;i++){
-		if(!(gO[i] instanceof Character) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: this.width-2, height: this.height-2}, gO[i])){
-			return false;
+		if(!(gO[i] instanceof Character) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: 62, height: 62}, gO[i])){
+			if(gO[i] instanceof ItemPile){
+				gO[i].addItems([new Item(item.itemType).setQuantity(numberToDrop)]);
+				item.quantity -= numberToDrop;
+				if(item.quantity <= 0) return true;
+
+				return false;
+			}
+			else{
+				return false;
+			}
 		}
 	}
 
@@ -739,7 +785,7 @@ ItemType.lookUpAllImages = function(imageRepository){
 }
 
 ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds").setWeight(1/8/8/8).setStacks(true).setImageID('redberrySeedItem').setBeforeUpdateFunction(function(delta, owner, item){
-	if(owner instanceof ItemPile){
+	if(owner instanceof ItemPile && owner.items.length == 1){
 		var gO = owner.parentLevel.gameObjects;
 
 		for(var i = 0;i < gO.length;i++){
