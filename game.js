@@ -114,7 +114,7 @@ function postLoad(){
 	   	currentLevel.load();
 	}
 	else{
-		setLevel(level4);
+		setLevel(level6);
 	}
 	
 	doDraw = doLogic = true;
