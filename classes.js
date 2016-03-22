@@ -124,6 +124,14 @@ Map.prototype.getPixelHeight = function(){
 	return this.numTilesY*this.tileHeight;
 }
 
+function ItemPile(x,y,items){
+	GameObject.call(this,x,y);
+
+	this.width = 64;
+	this.height = 64;
+	this.items = items;
+}
+
 //Tree Class, inherits GameObject
 function Tree(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
@@ -296,6 +304,8 @@ FarmingPatch.prototype.advancesToNextGrowthStage = function(delta){
 function PlantType(name){
 	this.name = name;
 	this.growthStages = [];
+	this.width = 64;
+	this.height = 64;
 }
 
 PlantType.prototype.lookUpImages = function(imageRepository){
@@ -478,6 +488,10 @@ Character.prototype.update = function(delta){
 				}
 				this.completeCurrentOrder();
 				break;
+			case "drop":
+				this.drop(curOrder);
+				this.completeCurrentOrder();
+				break;
 		}
 	}
 }
@@ -505,7 +519,13 @@ Character.prototype.addToInventory = function(obj){
 }
 
 Character.prototype.drop = function(obj, numberToDrop){
+	if(!(obj instanceof Order)){
+		this.orders.push(new Order("drop",{obj: obj, numberToDrop: numberToDrop}));
+		return;
+	}
+	else{numberToDrop = obj.getData().numberToDrop; obj = obj.getData().obj;}
 	if(typeof obj == 'number') {
+		if(this.inventory[obj] === undefined) return;
 		if(this.inventory[obj].handleDrop(this, numberToDrop)) this.inventory.splice(obj,obj+1);
 		return;
 	}
@@ -592,7 +612,18 @@ ItemType.prototype.isStackable = function(){
 	return this.stacks;
 }
 
-ItemType.prototype.handleDrop = function(item, character, numberToDrop){return false;}
+ItemType.prototype.handleDrop = function(item, character, numberToDrop){
+	if(numberToDrop === undefined) numberToDrop = 1;
+	if(numberToDrop <= 0) return false;
+	if(numberToDrop > item.quantity) numberToDrop = item.quantity;
+
+	character.parentLevel.addGameObject(null);
+
+	item.quantity -= numberToDrop;
+	if(item.quantity <= 0) return true;
+
+	return false;
+}
 
 ItemType.prototype.setDropFunction = function(f){
 	this.handleDrop = f;
@@ -606,7 +637,7 @@ ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds")
 	var gO = character.parentLevel.gameObjects;
 
 	for(var i = 0;i < gO.length;i++){
-		if(BoundingBoxClip({x: character.x+1, y: character.y+1, width: PlantType.Redberry.width-2, height: PlantType.Redberry.height-2}, gO[i])){
+		if(!(gO[i] instanceof Character) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: PlantType.Redberry.width-2, height: PlantType.Redberry.height-2}, gO[i])){
 			return false;
 		}
 	}
@@ -615,6 +646,8 @@ ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds")
 	item.quantity -= numberToDrop;
 	if(item.quantity <= 0) return true;
 });
+
+ItemType.Log = new ItemType("Log").setName("Log").setWeight(1).setStacks(true);
 
 //Order Class
 function Order(name, data){
@@ -687,7 +720,8 @@ CharacterList.prototype.harvest = function(callback){
 }
 
 CharacterList.prototype.drop = function(obj,numberToDrop,callback){
-	return this.forEach( function(){this.drop(obj,numberToDrop,callback);} );
+	var f = ((numberToDrop !== undefined) ? function(){this.drop(obj,numberToDrop);} : function(){this.drop(obj);});
+	return this.forEach(f);
 }
 
 CharacterList.prototype.say = function(s, t){
