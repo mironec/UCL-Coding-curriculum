@@ -117,8 +117,7 @@ Level.prototype.afterStart = function(){
 	this.addCharacter(bob);
 	
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
-	this.thingsToDraw.push(tree1);
-	this.gameObjects.push(tree1);
+	this.addGameObject(tree1);
 }
 
 Level.prototype.onKeyDown = function(e){
@@ -322,6 +321,11 @@ Level.prototype.addCharacter = function(character){
 	this.characters.add(character);
 	this.thingsToDraw.push(character);
 	this.gameObjects.push(character);
+}
+
+Level.prototype.addGameObject = function(object){
+	this.gameObjects.push(object);
+	this.thingsToDraw.push(object);
 }
 
 Level.prototype.showTutorial = function(s, persist){

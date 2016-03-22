@@ -23,8 +23,7 @@ level2.afterStart = function(){
 	this.addCharacter(bob);
 	
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
-	this.thingsToDraw.push(tree1);
-	this.gameObjects.push(tree1);
+	this.addGameObject(tree1);
 	
 	this.showTutorial("Now that you've grasp the idea of becoming a master of DarkScript, you will now be exposed to part of Bob's intellectual powers\n\n<Press enter to continue>", false);
 	this.done = 0;

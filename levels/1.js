@@ -37,13 +37,11 @@ level1.afterStart = function(){
 	this.addCharacter(bob);
 	
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
-	this.thingsToDraw.push(tree1);
-	this.gameObjects.push(tree1);
+	this.addGameObject(tree1);
 
 	PlantType.lookUpAllImages(this.imageRepository);
 	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
-	this.thingsToDraw.push(redberry);
-	this.gameObjects.push(redberry);
+	this.addGameObject(redberry);
     
     //building a house example
     buildType.lookUpAllImages(this.imageRepository);
@@ -51,14 +49,10 @@ level1.afterStart = function(){
     var houseBR = new BuildingSite(houseBL.x+64, houseBL.y, buildType.HouseBR);
     var houseTL = new BuildingSite(houseBL.x, houseBL.y-64, buildType.HouseTL);
     var houseTR = new BuildingSite(houseBL.x+64, houseBL.y-64, buildType.HouseTR)
-    this.thingsToDraw.push(houseBL);
-    this.gameObjects.push(houseBL);
-    this.thingsToDraw.push(houseBR);
-    this.gameObjects.push(houseBR);
-    this.thingsToDraw.push(houseTL);
-    this.gameObjects.push(houseTL);
-    this.thingsToDraw.push(houseTR);
-    this.gameObjects.push(houseTR);
+    this.addGameObject(houseBL);
+    this.addGameObject(houseBR);
+    this.addGameObject(houseTL);
+    this.addGameObject(houseTR);
     
 	this.showTutorial("In the beginning of time, Bob was there.\n\n<Press enter to continue>", false);
 	this.done = 0;
