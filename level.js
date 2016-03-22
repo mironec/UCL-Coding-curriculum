@@ -34,6 +34,7 @@ function Level (ctx, imageRepository){
 	this.allowedFunctions = [];
 	this.allowedFunctions.push(new GameFunction("getCharacterByName","currentLevel."));
 	this.allowedFunctions.push(new GameFunction("getNearestTree",""));
+	this.allowedFunctions.push(new GameFunction("say[\\s]*\\([\\s]*inventory","","say(function(){return this.inventory}"));
 	
 	this.spellbook = new Spellbook(this.allowedFunctions);
 	this.spellbook.hideFunc = this.hideSpellbook;
@@ -201,7 +202,7 @@ Level.prototype.executeScipt = function(script){
 	var ok = false;
 	for(var i=0;i<this.allowedFunctions.length;i++){
 		if(script.startsWith(this.allowedFunctions[i].getName())) ok=true;
-		script = script.replace(new RegExp(this.allowedFunctions[i].getName(),"g"), this.allowedFunctions[i].getHelpingNamespace()+this.allowedFunctions[i].getName());
+		script = script.replace(new RegExp(this.allowedFunctions[i].getName(),"g"), this.allowedFunctions[i].getHelpingNamespace()+this.allowedFunctions[i].getReplaceBy());
 	}
 	ok = true;
 	if(ok){

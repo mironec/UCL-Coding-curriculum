@@ -40,13 +40,15 @@ GameObject.prototype.distanceTo = function(gO){
 	return Math.sqrt(disX*disX + disY*disY);
 }
 
-function GameFunction(name,helpingNamespace){
+function GameFunction(name,helpingNamespace,replaceBy){
 	this.name = name;
 	this.helpingNamespace = helpingNamespace;
+	this.replaceBy = replaceBy;
 }
 
 GameFunction.prototype.getName = function(){ return this.name; }
 GameFunction.prototype.getHelpingNamespace = function(){ return this.helpingNamespace; }
+GameFunction.prototype.getReplaceBy = function(){ return this.replaceBy || this.name; }
 
 function Tile(type, variation){
 	this.type = type;
