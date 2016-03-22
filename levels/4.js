@@ -1,5 +1,5 @@
 var level4 = new Level(null, null);
-
+level4.moduleName="level4";
 level4.afterStart = function(){
 	var seed = 3824723.4358;
 	var pseudoRand = seed;
@@ -74,18 +74,18 @@ level4.afterUpdate = function(delta){
 	//TO BE MADE TRUE AS USER INPUT REQUIRE HERE
 	if(this.done == 4 && this.gameFocus != this.FOCUS_TUTORIAL)
 	{
-		this.showTutorial("Why don't we actually try writing out some code to help ease Bob's life.\n\nvar Name = \"Bob\";\n\nType in that code and press enter. This initializes the variable name with \"Bob\"", false);
+		this.showTutorial("Why don't we actually try writing out some code to help ease Bob's life.\n\nCreate a function called whatIsBobsName{} and within this function insert the following code:\n\nvar Name = \"Bob\";\n\nThis initializes the variable name with \"Bob\"", true);
 		this.done = 5;
 	}
 	
 
-	if(this.done == 5 && this.gameFocus != this.FOCUS_TUTORIAL)
+	if(this.done == 5 && bob.sayTime > 0 )
 	{
 		this.showTutorial("Let's carry out some mathematical operations using variables\nLets use the variable money which we already initialized to 5000.\nLets add 3000 to our money, because \"WHY NOT!!!\"\n\nvar newMoney = money+5000;\n\nType in that code and press enter.", false);
 		this.done = 6;
 	}
 
-	if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL)
+	if(this.done == 6 && bob.sayTime > 0)
 	{
 		this.showTutorial("Remember how we called \"Bob\" in the previous chapters and asked him to move. We already declared a variable Name and assigned \"Bob\" to it in this chapter.\n\n Lets use that variable now to call and ask Bob to say something:\n\ngetCharacterByName(Name).say(\"Hello World!\")", false);
 		this.done = 7;

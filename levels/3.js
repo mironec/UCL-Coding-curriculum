@@ -31,14 +31,17 @@ level3.afterStart = function(){
 
 level3.afterUpdate = function(delta){
 	var bob = this.getCharacterByName("Bob").arr[0];
-	if(this.done == 0 && this.gameFocus != this.FOCUS_TUTORIAL){
+	if(this.done == 0 && this.gameFocus != this.FOCUS_TUTORIAL ){
 		bob.sayTime = 0;
-		this.showTutorial("To unleash this mythical, legendary and magical The SpellBook, summon BOB the console and type in:\n\n showSpellbook();\n\n Do you see the magnificence of the Spellbook before your very eyes? I can even smell it.\n", false);
+		this.showTutorial("To unleash this mythical, legendary and magical The SpellBook, summon BOB the console and type in:\n\n currentLevel.showSpellbook()\n\n Do you see the magnificence of the Spellbook before your very eyes? I can even smell it.\n", true);
+		
 		this.done = 1;
 	}
 
 
-if(this.done == 1 && this.gameFocus != this.FOCUS_TUTORIAL){
+
+
+if(this.done == 1 && this.gameFocus == this.FOCUS_SPELLBOOK ){
 		this.showTutorial("Moving on, now you have the SpellBook, you will be able to write Bobunctions that are crucial to your journey of mastering DarkScript.\n\n You can write in the Spellbook, but if you scribble bobbirish into the pages then it will refuse to do as you say!\n\n ", false);
 
 		this.done = 2;
@@ -64,34 +67,44 @@ if(this.done == 1 && this.gameFocus != this.FOCUS_TUTORIAL){
 		this.done = 5;
 	}
 	
-
-	if(this.done == 5 && this.gameFocus != this.FOCUS_TUTORIAL )
-	{
-		this.showTutorial("Let's start writing your very own Bobunction!\n Start by summoning The Spellbook again if you closed it.\n Remember: \n\n showSpellbook(); to summon The Spellbook;", false);
+	if(this.done == 5 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.gameFocus = this.FOCUS_SPELLBOOK;
 		this.done = 6;
-	}
+	}		
 
-	if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL )
+
+	if(this.done == 6 && this.gameFocus == this.FOCUS_SPELLBOOK  )
 	{
-		this.showTutorial("Next write: \n\n function shoutHelloWorld(){}\n\n ", false);
+		
+		this.showTutorial("Let's start writing your very own Bobunction!\n Start by writing in the Spellbook after clicking on the '+': \n\n<c>function shoutHelloWorld(){}\n\n", true);
+		this.showSpellbook();
 		this.done = 7;
 	}
 
-	if(this.done == 7 && this.gameFocus != this.FOCUS_TUTORIAL )
+
+	/*if(this.done == 6 && this.gameFocus == this.FOCUS_SPELLBOOK )
 	{
-		this.showTutorial("Wow, I'm beginning to feel The Spellbook's power ripple through the Bobniverse, but we're not done yet.\n\n  Inside the curly brackets '{}' write in:\n\n getCharacterByName(\"Bob\").say(\"Hello World!\");\n\n Once you're done strike the 'Done' and keep your eye open to see The Spellbook vanish...\n", false);
+		this.showTutorial("Next write: \n\n function shoutHelloWorld(){}\n\n ", false);
+		this.done = 7;
+	}*/
+
+	if(this.done == 7 && this.gameFocus != this.FOCUS_SPELLBOOK )
+	{
+		this.showTutorial("Wow, I'm beginning to feel The Spellbook's power ripple through the Bobniverse, but we're not done yet.\n\n  Inside the curly brackets '{}' write in:\n\n<c>getCharacterByName(\"Bob\").say(\"Hello World!\");\n\n Once you're done strike the 'Done' and keep your eye open to see The Spellbook vanish...\n", true);
+		this.showSpellbook();
+
 		this.done = 8;
 	}
 
-	if(this.done == 8 && this.gameFocus != this.FOCUS_TUTORIAL )
+	if(this.done == 8 && this.gameFocus != this.FOCUS_SPELLBOOK )
 	{
-		this.showTutorial("The Spellbook has now stored your Bobunction.\n\n To use it, you must call it.\n Now, with all your might summon BOB the console and write:\n\n shoutHelloWorld();\n\n ", false);
+		this.showTutorial("The Spellbook has now stored your Bobunction.\n\n To use it, you must call it.\n Now, with all your might summon BOB the console and write:\n\n<c>shoutHelloWorld();\n\n ", true);
 		this.done = 9;
 	}
 
-	if(this.done == 9 && this.gameFocus != this.FOCUS_TUTORIAL )
+	if(this.done == 9 && bob.sayText.toLowerCase() == "hello world!" && bob.sayTime > 0 )
 	{
-		this.showTutorial("\n\n\nEmbrace The Spellbook and BOB the console because they will forever be vital to you.\n\n ", false);
+		this.showTutorial("Embrace The Spellbook and BOB the console because they will forever be vital to you.\n\n ", false);
 		this.done = 10;
 	}
 
