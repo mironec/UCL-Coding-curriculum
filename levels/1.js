@@ -39,16 +39,14 @@ level1.afterStart = function(){
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
 	this.addGameObject(tree1);
 
-	PlantType.lookUpAllImages(this.imageRepository);
 	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
 	this.addGameObject(redberry);
     
     //building a house example
-    buildType.lookUpAllImages(this.imageRepository);
-	var houseBL = new BuildingSite(-256, -64, buildType.HouseBL);
-    var houseBR = new BuildingSite(houseBL.x+64, houseBL.y, buildType.HouseBR);
-    var houseTL = new BuildingSite(houseBL.x, houseBL.y-64, buildType.HouseTL);
-    var houseTR = new BuildingSite(houseBL.x+64, houseBL.y-64, buildType.HouseTR)
+	var houseBL = new BuildingSite(-256, -64, BuildType.HouseBL);
+    var houseBR = new BuildingSite(houseBL.x+64, houseBL.y, BuildType.HouseBR);
+    var houseTL = new BuildingSite(houseBL.x, houseBL.y-64, BuildType.HouseTL);
+    var houseTR = new BuildingSite(houseBL.x+64, houseBL.y-64, BuildType.HouseTR)
     this.addGameObject(houseBL);
     this.addGameObject(houseBR);
     this.addGameObject(houseTL);

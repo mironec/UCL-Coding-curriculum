@@ -124,12 +124,44 @@ Map.prototype.getPixelHeight = function(){
 	return this.numTilesY*this.tileHeight;
 }
 
-function ItemPile(x,y,items){
+function ItemPile(x,y,parentLevel,items){
 	GameObject.call(this,x,y);
 
 	this.width = 64;
 	this.height = 64;
 	this.items = items;
+	this.parentLevel = parentLevel;
+}
+
+ItemPile.prototype = Object.create(GameObject.prototype);
+ItemPile.prototype.constructor = ItemPile;
+
+ItemPile.prototype.draw = function(ctx){
+	ctx.save();
+	ctx.translate(this.x,this.y);
+	if(this.items.length == 1 && this.items[0].getImageReady()){
+		ctx.drawImage(this.items[0].getImage(),0,0);
+	}
+	else if(ItemType._mixed.imageReady){
+		ctx.drawImage(ItemType._mixed.image,0,0);
+	}
+	ctx.restore();
+}
+
+ItemPile.prototype.update = function(delta){
+	var toDelete = [];
+	for(var i=0;i<this.items.length;i++){
+		var response = this.items[i].update(delta,this);
+		if(response instanceof Object && response.remove !== undefined && response.remove){
+			toDelete.push(i);
+		}
+	}
+
+	for(var i = 0; i < toDelete.length; i++){
+		this.items.splice(toDelete[i],1);
+	}
+
+	if(this.items.length == 0) return {remove:true};
 }
 
 //Tree Class, inherits GameObject
@@ -207,12 +239,12 @@ BuildingSite.prototype.advancesToNextBuildStage = function(delta){
 	return this.buildType.advancesToNextBuildStage(delta, this);
 }
 
-function buildType(name){
+function BuildType(name){
 	this.name = name;
 	this.buildStages = [];
 }
 
-buildType.prototype.lookUpImages = function(imageRepository){
+BuildType.prototype.lookUpImages = function(imageRepository){
 	for(var i = 0; i < this.buildStages.length ; i++){
 		//bS for build stage
         var bS = this.buildStages[i];
@@ -224,35 +256,35 @@ buildType.prototype.lookUpImages = function(imageRepository){
 	return this;
 }
 
-buildType.prototype.addBuildStage = function(newBuildStage){
+BuildType.prototype.addBuildStage = function(newBuildStage){
 	this.buildStages.push(newBuildStage);
 	return this;
 }
 
-buildType.prototype.advancesToNextBuildStage = function(delta, site){
+BuildType.prototype.advancesToNextBuildStage = function(delta, site){
 	return (site.buildStage < this.buildStages.length - 1) && (site.timeInThisBuildStage >= this.buildStages[site.buildStage+1].time);
 }
 
 
-buildType.lookUpAllImages = function(imageRepository){
-	for(var i in buildType){
-		if(!buildType.hasOwnProperty(i)) continue;
-		if(buildType[i] instanceof buildType){
-			buildType[i].lookUpImages(imageRepository);
+BuildType.lookUpAllImages = function(imageRepository){
+	for(var i in BuildType){
+		if(!BuildType.hasOwnProperty(i)) continue;
+		if(BuildType[i] instanceof BuildType){
+			BuildType[i].lookUpImages(imageRepository);
 		}
 	}
 }
 //House Bottom Left
-buildType.HouseBL = new buildType("HouseBL")
+BuildType.HouseBL = new BuildType("HouseBL")
 .addBuildStage({time:5000,imageID:'HouseBL1'}).addBuildStage({time:5000,imageID:'HouseBL2'}).addBuildStage({time:5000,imageID:'HouseBL3'});
 //House Bottom Right
-buildType.HouseBR = new buildType("HouseBR")
+BuildType.HouseBR = new BuildType("HouseBR")
 .addBuildStage({time:5000,imageID:'HouseBR1'}).addBuildStage({time:5000,imageID:'HouseBR2'}).addBuildStage({time:5000,imageID:'HouseBR3'});
 //House Top Left
-buildType.HouseTL = new buildType("HouseTL")
+BuildType.HouseTL = new BuildType("HouseTL")
 .addBuildStage({time:5000,imageID:'HouseTL1'}).addBuildStage({time:5000,imageID:'HouseTL2'}).addBuildStage({time:5000,imageID:'HouseTL3'});
 //House Top Right
-buildType.HouseTR = new buildType("HouseTR")
+BuildType.HouseTR = new BuildType("HouseTR")
 .addBuildStage({time:5000,imageID:'HouseTR1'}).addBuildStage({time:5000,imageID:'HouseTR2'}).addBuildStage({time:5000,imageID:'HouseTR3'});
 
 //End of building class and start of Farming Patch
@@ -261,6 +293,7 @@ function FarmingPatch(x,y,plantType){
 
 	this.growthStage = 0;
 	this.timeInThisGrowthStage = 0;
+	this.timeAlive = 0;
 	this.plantType = plantType;
 	this.width = plantType.width || 64;
 	this.height = plantType.height || 64;
@@ -281,9 +314,13 @@ FarmingPatch.prototype.draw = function(ctx){
 
 FarmingPatch.prototype.update = function(delta){
 	this.timeInThisGrowthStage += delta;
+	this.timeAlive += delta;
 	if(this.advancesToNextGrowthStage(delta)){
 		this.setGrowthStage(this.growthStage + 1);
 		this.timeInThisGrowthStage -= this.plantType.growthStages[this.growthStage-1].time;
+	}
+	if(this.diesDueToAge(delta)){
+		return {remove:true};
 	}
 }
 
@@ -299,6 +336,10 @@ FarmingPatch.prototype.harvest = function(){
 
 FarmingPatch.prototype.advancesToNextGrowthStage = function(delta){
 	return this.plantType.advancesToNextGrowthStage(delta, this);
+}
+
+FarmingPatch.prototype.diesDueToAge = function(delta){
+	return this.plantType.diesDueToAge(delta, this);
 }
 
 function PlantType(name){
@@ -331,6 +372,15 @@ PlantType.prototype.setHarvestFunction = function(f){
 
 PlantType.prototype.advancesToNextGrowthStage = function(delta, patch){
 	return (patch.growthStage < this.growthStages.length - 1) && (patch.timeInThisGrowthStage >= this.growthStages[patch.growthStage+1].time);
+}
+
+PlantType.prototype.diesDueToAge = function(delta, patch){
+	return false;
+}
+
+PlantType.prototype.setAgeDieFunction = function(f){
+	this.diesDueToAge = f;
+	return this;
 }
 
 PlantType.prototype.harvest = function(farmingPatch){
@@ -526,13 +576,13 @@ Character.prototype.drop = function(obj, numberToDrop){
 	else{numberToDrop = obj.getData().numberToDrop; obj = obj.getData().obj;}
 	if(typeof obj == 'number') {
 		if(this.inventory[obj] === undefined) return;
-		if(this.inventory[obj].handleDrop(this, numberToDrop)) this.inventory.splice(obj,obj+1);
+		if(this.inventory[obj].handleDrop(this, numberToDrop)) this.inventory.splice(obj,1);
 		return;
 	}
 	if(obj instanceof Item) {
 		for(var i = 0; i < this.inventory.length;i++){
 			if(this.inventory[i] == obj) {
-				if(this.inventory[i].handleDrop(this, numberToDrop)) this.inventory.splice(i,i+1);
+				if(this.inventory[i].handleDrop(this, numberToDrop)) this.inventory.splice(i,1);
 			}
 		}
 		return;
@@ -540,7 +590,7 @@ Character.prototype.drop = function(obj, numberToDrop){
 	if(typeof obj == 'string' || typeof obj == 'String'){
 		for(var i = 0; i < this.inventory.length;i++){
 			if(this.inventory[i].getName() == obj) {
-				if(this.inventory[i].handleDrop(this, numberToDrop)) this.inventory.splice(i,i+1);
+				if(this.inventory[i].handleDrop(this, numberToDrop)) this.inventory.splice(i,1);
 			}
 		}
 		return;
@@ -578,6 +628,14 @@ Item.prototype.getName = function(){
 	return this.itemType.itemName;
 }
 
+Item.prototype.getImage = function(){
+	return this.itemType.image;
+}
+
+Item.prototype.getImageReady = function(){
+	return this.itemType.imageReady;
+}
+
 Item.prototype.isStackable = function(){
 	return this.itemType.isStackable();
 }
@@ -586,11 +644,17 @@ Item.prototype.handleDrop = function(character, numberToDrop){
 	return this.itemType.handleDrop(this, character, numberToDrop);
 }
 
+Item.prototype.update = function(delta, owner){
+	return this.itemType.update(delta, owner, this);
+}
+
 function ItemType(itemID){
 	this.itemID = itemID;
 	this.itemName = itemID;
 	this.weight = 0;
 	this.stacks = false;
+	this.image = null;
+	this.imageReady = false;
 }
 
 ItemType.prototype.setName = function(name){
@@ -608,8 +672,22 @@ ItemType.prototype.setStacks = function(stacks){
 	return this;
 }
 
+ItemType.prototype.setImageID = function(imageID){
+	this.imageID = imageID;
+	return this;
+}
+
 ItemType.prototype.isStackable = function(){
 	return this.stacks;
+}
+
+ItemType.prototype.lookUpImages = function(imageRepository){
+	if(this.imageID !== undefined) {
+		this.image = imageRepository.getImage(this.imageID);
+		delete this.imageID;
+		this.imageReady = true;
+	}
+	return this;
 }
 
 ItemType.prototype.handleDrop = function(item, character, numberToDrop){
@@ -617,7 +695,15 @@ ItemType.prototype.handleDrop = function(item, character, numberToDrop){
 	if(numberToDrop <= 0) return false;
 	if(numberToDrop > item.quantity) numberToDrop = item.quantity;
 
-	character.parentLevel.addGameObject(null);
+	var gO = character.parentLevel.gameObjects;
+
+	for(var i = 0;i < gO.length;i++){
+		if(!(gO[i] instanceof Character) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: this.width-2, height: this.height-2}, gO[i])){
+			return false;
+		}
+	}
+
+	character.parentLevel.addGameObject(new ItemPile(character.x, character.y, character.parentLevel, [new Item(item.itemType).setQuantity(numberToDrop)] ));
 
 	item.quantity -= numberToDrop;
 	if(item.quantity <= 0) return true;
@@ -625,29 +711,53 @@ ItemType.prototype.handleDrop = function(item, character, numberToDrop){
 	return false;
 }
 
+ItemType.prototype.update = function(delta, owner, item){
+	var response = this.beforeUpdate(delta, owner, item);
+	if(item.quantity <= 0) response.remove = true;
+	return response;
+}
+
+ItemType.prototype.beforeUpdate = function(delta, owner, item){}
+
 ItemType.prototype.setDropFunction = function(f){
 	this.handleDrop = f;
 	return this;
 }
 
-ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds").setWeight(1/8/8/8).setStacks(true).setDropFunction(function(item, character, numberToDrop){
-	if(numberToDrop === undefined) numberToDrop = 1;
-	if(numberToDrop <= 0) return false;
+ItemType.prototype.setBeforeUpdateFunction = function(f){
+	this.beforeUpdate = f;
+	return this;
+}
 
-	var gO = character.parentLevel.gameObjects;
-
-	for(var i = 0;i < gO.length;i++){
-		if(!(gO[i] instanceof Character) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: PlantType.Redberry.width-2, height: PlantType.Redberry.height-2}, gO[i])){
-			return false;
+ItemType.lookUpAllImages = function(imageRepository){
+	for(var i in ItemType){
+		if(!ItemType.hasOwnProperty(i)) continue;
+		if(ItemType[i] instanceof ItemType){
+			ItemType[i].lookUpImages(imageRepository);
 		}
 	}
+}
 
-	character.parentLevel.addGameObject(new FarmingPatch(character.x, character.y, PlantType.Redberry));
-	item.quantity -= numberToDrop;
-	if(item.quantity <= 0) return true;
+ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds").setWeight(1/8/8/8).setStacks(true).setImageID('redberrySeedItem').setBeforeUpdateFunction(function(delta, owner, item){
+	if(owner instanceof ItemPile){
+		var gO = owner.parentLevel.gameObjects;
+
+		for(var i = 0;i < gO.length;i++){
+			if(!(gO[i] instanceof Character) && !(gO[i] == owner) && BoundingBoxClip({x: owner.x+1, y: owner.y+1, width: PlantType.Redberry.width-2, height: PlantType.Redberry.height-2}, gO[i])){
+				return {};
+			}
+		}
+
+		owner.parentLevel.addGameObject(new FarmingPatch(owner.x, owner.y, PlantType.Redberry));
+
+		item.quantity--;
+		return {};
+	}
+	return {};
 });
 
 ItemType.Log = new ItemType("Log").setName("Log").setWeight(1).setStacks(true);
+ItemType._mixed = new ItemType("_mixed").setImageID("itemPile");
 
 //Order Class
 function Order(name, data){

@@ -7,6 +7,7 @@ function Level (ctx, imageRepository){
 	this.dummyCtx=this.dummyCanvas.getContext('2d');
 	this.thingsToDraw = [];
 	this.gameObjects = [];
+	this.saveFunctionHandle = undefined;
 	
 	this.FOCUS_GAME = 0;
 	this.FOCUS_SCRIPT_BAR = 1;
@@ -55,6 +56,10 @@ Level.prototype.setCtx = function(ctx){
 Level.prototype.setImageRepository = function(imageRepo){
 	this.imageRepository = imageRepo;
 	this.map.imageRepository = imageRepo;
+
+	ItemType.lookUpAllImages(this.imageRepository);
+	PlantType.lookUpAllImages(this.imageRepository);
+	BuildType.lookUpAllImages(this.imageRepository);
 }
 
 Level.prototype.start = function(){
@@ -94,6 +99,8 @@ Level.prototype.destroy = function(){
 	window.removeEventListener("mouseup", this.onMouseUpE);
 
 	window.removeEventListener("resize", this.onResizeE);
+
+	if(this.saveFunctionHandle !== undefined) clearTimeout(this.saveFunctionHandle);
 }
 
 Level.prototype.afterStart = function(){
@@ -301,8 +308,25 @@ Level.prototype.draw = function(delta){
 }
 
 Level.prototype.update = function(delta){
+	var toDelete = [];
 	for(var i = 0; i <  this.gameObjects.length; i++){
-		this.gameObjects[i].update(delta);
+		var response = this.gameObjects[i].update(delta);
+		if(response instanceof Object && response.remove !== undefined && response.remove) {
+			var j = 0;
+			for(j=0;j<this.thingsToDraw.length;j++){
+				if(this.thingsToDraw[j] == this.gameObjects[i]){
+					break;
+				}
+			}
+			toDelete.push([i,j]);
+		}
+	}
+
+	
+
+	for(var i = 0; i < toDelete.length; i++){
+		this.gameObjects.splice(toDelete[i][0],1);
+		this.thingsToDraw.splice(toDelete[i][1],1);
 	}
 
 	this.afterUpdate(delta);
@@ -406,11 +430,14 @@ Level.prototype.savingFunc = function(key, value){
 	if(value instanceof Object && value.constructor.name === "PlantType"){
 		return {value: value.name, protoHack: value.constructor.name};
 	}
-    if(value instanceof Object && value.constructor.name === "buildType"){
+    if(value instanceof Object && value.constructor.name === "BuildType"){
 		return {value: value.name, protoHack: value.constructor.name};
 	}
 	if(value instanceof Object && value.constructor.name === "ItemType"){
 		return {value: value.itemID, protoHack: value.constructor.name};
+	}
+	if(value == null){
+		return null;
 	}
 	if(typeof value === 'object' && key !== 'value' && key !== ''){
 		return {value: value, protoHack: value.constructor.name};
@@ -442,7 +469,7 @@ Level.prototype.parsingFunc = function(key, value){
 		if(typeof value.value == 'number') return this.gameObjects[value.value];
 		if(value.protoHack === "HTMLImageElement") return imageRepository.getImage(value.value);
 		if(value.protoHack === "PlantType") return PlantType[value.value];
-        if(value.protoHack === "buildType") return buildType[value.value];
+        if(value.protoHack === "BuildType") return BuildType[value.value];
 		if(value.protoHack === "ItemType") return ItemType[value.value];
 		var obj = Object.create(window[value.protoHack].prototype);
 		copyProperties(obj, value.value);
@@ -470,7 +497,7 @@ Level.prototype.save = function(){
 	localStorage.setItem("uncleBob.savedGameObjects", data2);
 
 	console.log("Game has been saved.");
-	saveFunctionHandle = setTimeout(function(){parentLevel.save();}, 1000*15);
+	this.saveFunctionHandle = setTimeout(function(){parentLevel.save();}, 1000*15);
 }
 
 Level.prototype.load = function(){
@@ -490,4 +517,11 @@ Level.prototype.load = function(){
 	copyProperties(this, someObj);
 
 	return someObj;
+}
+
+Level.prototype.eraseSave = function(){
+	localStorage.setItem("uncleBob.savedLevelName", "");
+	localStorage.setItem("uncleBob.savedSpellbookTabs", "");
+	localStorage.setItem("uncleBob.savedLevel", "");
+	localStorage.setItem("uncleBob.savedGameObjects", "");
 }

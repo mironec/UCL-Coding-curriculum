@@ -13,7 +13,6 @@ var currentLevel;
 var doDraw, doLogic;
 
 var animationFrameHandle;
-var saveFunctionHandle;
 
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
@@ -89,14 +88,17 @@ function init(){
 			keysDown = {};
 			destroy();
 			animationFrameHandle = undefined;
-			saveFunctionHandle = undefined;
 			imageRepository.loadImages([
-				'bob','grass1','grass2','grass3','grass4','grass5','grass6','tree1','stump1','redberry1','redberry2','redberry3','redberry4','redberry5','HouseBL1','HouseBL2','HouseBL3','HouseBR1', 'HouseBR2', 'HouseBR3', 'HouseTL1', 'HouseTL2', 'HouseTL3', 'HouseTR1', 'HouseTR2', 'HouseTR3'
+				'bob','grass1','grass2','grass3','grass4','grass5','grass6',
+				'tree1','stump1','redberry1','redberry2','redberry3','redberry4','redberry5',
+				'HouseBL1','HouseBL2','HouseBL3','HouseBR1', 'HouseBR2', 'HouseBR3', 'HouseTL1', 'HouseTL2', 'HouseTL3', 'HouseTR1', 'HouseTR2', 'HouseTR3',
+				'redberrySeedItem','itemPile'
 				],[
 				'images/Bob.png','images/Grass1.png','images/Grass2.png','images/Grass3.png','images/Grass4.png','images/Grass5.png','images/Grass6.png','images/Tree1.png','images/Stump1.png',
 				'images/FarmingPatch1.png','images/FarmingPatch2.png','images/FarmingPatch3.png','images/FarmingPatch4.png','images/FarmingPatch5.png',
                 //House images set of 4, BotLeft, BotRight, TopLeft, TopRight
-                'images/HouseBL1.png', 'images/HouseBL2.png', 'images/HouseBL3.png','images/HouseBR1.png', 'images/HouseBR2.png', 'images/HouseBR3.png','images/HouseTL1.png', 'images/HouseTL2.png', 'images/HouseTL3.png','images/HouseTR1.png', 'images/HouseTR2.png', 'images/HouseTR3.png'
+                'images/HouseBL1.png', 'images/HouseBL2.png', 'images/HouseBL3.png','images/HouseBR1.png', 'images/HouseBR2.png', 'images/HouseBR3.png','images/HouseTL1.png', 'images/HouseTL2.png', 'images/HouseTL3.png','images/HouseTR1.png', 'images/HouseTR2.png', 'images/HouseTR3.png',
+                'images/RedberrySeedItem.png','images/ItemPile.png'
 				], function(){postLoad();});
 			
 		}
@@ -108,26 +110,36 @@ function postLoad(){
 	   localStorage.getItem("uncleBob.savedGameObjects") !== undefined && localStorage.getItem("uncleBob.savedGameObjects") !== "" &&
 	   localStorage.getItem("uncleBob.savedSpellbookTabs") !== undefined && localStorage.getItem("uncleBob.savedSpellbookTabs") !== "" &&
 	   localStorage.getItem("uncleBob.savedLevelName") !== undefined && localStorage.getItem("uncleBob.savedLevelName") !== "") {
-	   	if(currentLevel !== undefined) currentLevel.destroy();
-	   	currentLevel = window[localStorage.getItem("uncleBob.savedLevelName")];
-		currentLevel.setCtx(ctx);
-		currentLevel.setImageRepository(imageRepository);
-		currentLevel.start();
-		currentLevel.load();
+	   	setLevel(localStorage.getItem("uncleBob.savedLevelName"));
+	   	currentLevel.load();
 	}
 	else{
-		currentLevel = level3;
-		currentLevel.setCtx(ctx);
-		currentLevel.setImageRepository(imageRepository);
-		currentLevel.start();
+		setLevel(level3);
 	}
 	
 	doDraw = doLogic = true;
 	lastSecondTime = Date.now();
 	
 	mainLoop();
+}
 
-	saveFunctionHandle =  setTimeout(function(){currentLevel.save();}, 1000*5);
+function setLevel(arg){
+	if(arg instanceof Level){
+		if(currentLevel !== undefined) currentLevel.destroy();
+	   	currentLevel = arg;
+		currentLevel.setCtx(ctx);
+		currentLevel.setImageRepository(imageRepository);
+		currentLevel.start();
+		currentLevel.saveFunctionHandle = setTimeout(function(){currentLevel.save();}, 1000*5);
+	}
+	else if(typeof arg === 'string' || typeof arg === 'String'){
+		if(currentLevel !== undefined) currentLevel.destroy();
+	   	currentLevel = window[arg];
+		currentLevel.setCtx(ctx);
+		currentLevel.setImageRepository(imageRepository);
+		currentLevel.start();
+		currentLevel.saveFunctionHandle = setTimeout(function(){currentLevel.save();}, 1000*5);
+	}
 }
 
 function draw(delta){
@@ -164,7 +176,6 @@ var mainLoop = function(){
 
 var destroy = function(){
 	if(animationFrameHandle !== undefined) cancelAnimationFrame(animationFrameHandle);
-	if(saveFunctionHandle !== undefined) clearTimeout(saveFunctionHandle);
 }
 
 lastMainLoopTime = Date.now();
