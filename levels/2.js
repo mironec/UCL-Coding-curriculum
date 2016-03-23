@@ -10,7 +10,20 @@ level2.afterStart = function(){
 		var a = [];
 		for(j=0;j<40;j++){
 			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
-			a.push({type: "grass", variation: Math.floor(pseudoRand*2 + 1) });
+            var rndgen = Math.floor(pseudoRand*60 + 1);
+            if(rndgen < 52){
+                a.push({type: "grass", variation: 6});
+            }else if((rndgen > 51) && (rndgen < 55)){
+                a.push({type: "grass", variation: 3});
+            }else if((rndgen > 54) && (rndgen < 58)){
+                a.push({type: "grass", variation: 2});
+            }else if((rndgen > 57) && (rndgen < 59)){
+                a.push({type: "grass", variation: 1});
+            }else if((rndgen > 58) && (rndgen < 60)){
+                a.push({type: "grass", variation: 5});
+            }else if((rndgen > 59) && (rndgen < 61)){
+                a.push({type: "grass", variation: 4});
+            }
 		}
 		b.push(a);
 	}
@@ -25,7 +38,7 @@ level2.afterStart = function(){
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
 	this.addGameObject(tree1);
 	
-	this.showTutorial("Now that you've grasp the idea of becoming a master of DarkScript, you will now be exposed to part of Bob's intellectual powers\n\n<Press enter to continue>", false);
+	this.showTutorial("Now that you've grasped the idea of becoming a master of DarkScript, you will now be exposed to part of Bob's intellectual powers\n\n<Press enter to continue>", false);
 	this.done = 0;
 }
 
@@ -43,7 +56,7 @@ level2.afterUpdate = function(delta){
 			this.done = 2;
 		}
 		else if(bob.sayText.toLowerCase() != "23"){
-			this.showTutorial("make sure at this moment you're telling bob to answer 20 + 3!", false);
+			this.showTutorial("Make sure at this moment you're telling bob to answer 20 + 3!", false);
 			this.done = 0;
 		}
 		else{
@@ -52,7 +65,7 @@ level2.afterUpdate = function(delta){
 		}
 	}
 	if(this.done == 2 && this.gameFocus != this.FOCUS_TUTORIAL){
-        this.showTutorial("How about we try to wipe that cheesy smirk off Bob’s face?", false);
+        this.showTutorial("How about we try to wipe that cheesy smirk off Bob's face?", false);
         this.done = 3;
     } 
     
@@ -69,7 +82,7 @@ level2.afterUpdate = function(delta){
 	//This is the if statement that will tell whether the user typed into the console correctly. Otherwise we make the user retype the statement
     if(this.done == 5 && bob.sayTime > 0){
 		if(bob.sayText.toLowerCase() == "270"){
-			this.showTutorial("Looks like that didn’t throw Bob off either, Bob is just showing off now, just look at Bob", false);
+			this.showTutorial("Looks like that didn’t throw Bob off either, Bob is just showing off now, just look at Bob.", false);
 			this.done = 6;
 		}
 		else if(bob.sayText.toLowerCase() != "270"){
@@ -120,12 +133,7 @@ level2.afterUpdate = function(delta){
 	}
     
     if(this.done == 13 && this.gameFocus != this.FOCUS_TUTORIAL){
-		this.showTutorial("In Bob-niverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction has the same but lower precedence.", false);
-		this.done = 14;
-	}
-    
-    if(this.done == 13 && this.gameFocus != this.FOCUS_TUTORIAL){
-		this.showTutorial("In Bob-niverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction has the same but lower precedence.", false);
+		this.showTutorial("In Bob-niverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction have the same but lower precedence.", false);
 		this.done = 14;
 	}
     
@@ -137,7 +145,7 @@ level2.afterUpdate = function(delta){
     
      if(this.done == 15 && bob.sayTime > 0){
 		if(bob.sayText.toLowerCase() == "23"){
-			this.showTutorial("Looks like that didn’t throw Bob off either, Bob is just showing off now, just look at Bob", false);
+			this.showTutorial("Congratulations! Bob has shown you his mathematical prowess and we can move on to the next part...", false);
 			this.done = 16;
 		}
 		else if(bob.sayText.toLowerCase() != "23"){
@@ -149,6 +157,9 @@ level2.afterUpdate = function(delta){
 			this.done = 16;
 		}
 	}
-    
-    
+
+	if(this.done == 16 && this.gameFocus != this.FOCUS_TUTORIAL){
+		setLevel(level3);
+		currentLevel.save();
+	}
 }

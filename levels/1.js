@@ -121,6 +121,7 @@ level1.afterUpdate = function(delta){
 	}
 	
 	if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
-		//Do second level
+		setLevel(level2);
+		currentLevel.save();
 	}
 }

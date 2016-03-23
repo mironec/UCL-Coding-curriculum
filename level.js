@@ -373,12 +373,12 @@ Level.prototype.showTutorial = function(s, persist){
 		
 		this.dummyCtx.font = "14px Arial";
 		
-		if(newLine == newIndex){
+		if(newLine == newIndex && this.dummyCtx.measureText(strAcc).width + this.dummyCtx.measureText(newStr).width < 400){
 			strAcc += newStr;
 			strRes += strAcc + "\n";
 			strAcc = "";
 		}
-		else if(this.dummyCtx.measureText(strAcc).width + this.dummyCtx.measureText(newStr).width > 400){
+		else if(this.dummyCtx.measureText(strAcc).width + this.dummyCtx.measureText(newStr).width >= 400){
 			strRes += strAcc.substring(0,strAcc.length-1) + "\n";
 			strAcc = newStr + " ";
 		}
