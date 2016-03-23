@@ -242,8 +242,8 @@ function BuildingSite(x, y, buildType){
     this.buildStage = 0;
     this.timeInThisBuildStage = 0;
     this.buildType = buildType;
-    this.width = 128;
-    this.height = 128;
+    this.width = 64;
+    this.height = 64;
     this.image = buildType.buildStages[0].image;
     this.passable = false;
     if(this.image !== undefined) this.imageReady = true;
@@ -558,9 +558,29 @@ Character.prototype.update = function(delta){
 					if(desireDist == 0) {this.completeCurrentOrder(); return;}
 					var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
 					
+					var oldx = this.x; var oldy = this.y;
+
 					this.x += realDist/desireDist * desireX;
+					var a = this.parentLevel.getIntersectingObjectsStrict(this);
+					for(var i=0;i<a.length;i++){
+						if(!a[i].passable){
+							if(desireX>0){ this.x = Math.min(this.x,a[i].x-this.width); }
+							else{ this.x = Math.max(this.x,a[i].x+a[i].width); }
+						}
+					}
+
 					this.y += realDist/desireDist * desireY;
+					var a = this.parentLevel.getIntersectingObjectsStrict(this);
+					for(var i=0;i<a.length;i++){
+						if(!a[i].passable){
+							if(desireY>0){ this.y = Math.min(this.y,a[i].y-this.height); }
+							else{ this.y = Math.min(this.y,a[i].y+a[i].height); }
+						}
+					}
+
 					delta = 0;
+
+					if(this.x == oldx && this.y == oldy) {this.completeCurrentOrder(); return;}
 
 					var m = this.parentLevel.map; var b = false;
 					if(this.x + this.width > m.getPixelWidth() + m.beginX)   {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
@@ -686,6 +706,10 @@ Character.prototype.pickUp = function(obj, numberToPickup){
 		}
 		return;
 	}*/
+}
+
+Character.prototype.stop = function(){
+	this.orders = [];
 }
 
 Character.prototype.completeCurrentOrder = function(){
@@ -940,6 +964,10 @@ CharacterList.prototype.pickUp = function(obj,numberToDrop,callback){
 
 CharacterList.prototype.say = function(s, t){
 	this.forEach(function(){this.say(s,t);});
+}
+
+CharacterList.prototype.stop = function(args){
+	this.forEach(function(){this.stop(args);});
 }
 
 CharacterList.prototype.draw = function(ctx){

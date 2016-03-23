@@ -422,11 +422,38 @@ Level.prototype.getNearestTreeTo = function(character){
 }
 
 Level.prototype.getIntersectingObjects = function(x, y, width, height){
+	if(x instanceof Object){
+		y = x.y;
+		width = x.width;
+		height = x.height;
+		x = x.x;
+	}
+
 	var gO = this.gameObjects;
 	var a = [];
 
 	for(var i = 0;i < gO.length;i++){
 		if( BoundingBoxClip({x: x, y: y, width: width, height: height}, gO[i]) ){
+			a.push(gO[i]);
+		}
+	}
+
+	return a;
+}
+
+Level.prototype.getIntersectingObjectsStrict = function(x, y, width, height){
+	if(x instanceof Object){
+		y = x.y;
+		width = x.width;
+		height = x.height;
+		x = x.x;
+	}
+
+	var gO = this.gameObjects;
+	var a = [];
+
+	for(var i = 0;i < gO.length;i++){
+		if( BoundingBoxClipStrict({x: x, y: y, width: width, height: height}, gO[i]) ){
 			a.push(gO[i]);
 		}
 	}
