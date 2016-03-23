@@ -133,7 +133,7 @@ level2.afterUpdate = function(delta){
 	}
     
     if(this.done == 13 && this.gameFocus != this.FOCUS_TUTORIAL){
-		this.showTutorial("In Bob-niverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction have the same but lower precedence.", false);
+		this.showTutorial("In Bobniverse education, maths operators such as (*)Multiplication, ( / )division, ( + )Addition and ( – ) Subtraction are separated by their Precedence, in other words, their priority of importance. ( * ) Multiplication and ( / ) division have the same precedence, and ( + ) addition with ( - ) subtraction have the same but lower precedence.", false);
 		this.done = 14;
 	}
     
@@ -158,7 +158,47 @@ level2.afterUpdate = function(delta){
 		}
 	}
 
-	if(this.done == 16 && this.gameFocus != this.FOCUS_TUTORIAL){
+	
+      if(this.done == 16 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Bob the Narrator: You now know that Bob’s love is real.", false);
+		this.done = 17;
+	}
+     if(this.done == 17 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("But what happens when you have the two operators with the same amount of love that Bob gives? Despite being torn by the decision, despite the pain inside Bob’s heart, All Bobs has a love theory that states love should follow a first come first serve basis.", false);
+		this.done = 18;
+	}
+    if(this.done == 18 && this.gameFocus != this.FOCUS_TUTORIAL){
+        this.sayTime = 0;
+		this.showTutorial("Bob scans from left to right, try using this to make Bob unveil Bob’s love theory: \n\n<c>getCharacterByName(“Bob”).say( 8 - 3 + 6)\n\n", true);
+		this.done = 19;
+	}
+     if(this.done == 19 && bob.sayTime > 0){
+		if(bob.sayText.toLowerCase() == "11"){
+			this.showTutorial("Since Bob answered 11 instead of – 1 we can confirm that Bob goes for the subtraction operator because it was first in line from a left to right point of view. \n\nUnfortunately, even when Bob follows Bobs love theory, Bobs still goes in a state of sadness when forced to make a decision.", false);
+			this.done = 20;
+		}
+		else if(bob.sayText.toLowerCase() != "23"){
+			this.showTutorial("Are you sure you've written the intense mathematical expression correctly?", false);
+			this.done = 18;
+		}
+		else{
+			this.showTutorial("Bob said something incomprehensible. Again.", false);
+			this.done = 18;
+		}
+	}
+    if(this.done == 20 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("So just remember, that when it comes to the order of operations, Bob needs special care to make sure you get the correct answer. ", false);
+		this.done = 21;
+	}
+    if(this.done == 21 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("Instead you could just make sure you use brackets like this: \n\n<c>getCharacterByName(“Bob”).say( 8 – (3 + 6))\n\n", false);
+		this.done = 22;
+	}
+    if(this.done == 22 && this.gameFocus != this.FOCUS_TUTORIAL){
+		this.showTutorial("With brackets you can be certain about the validity of your mathematical expressions and with brackets you can help Bob make love decisions with less pain.", false);
+		this.done = 23;
+	}
+    if(this.done == 23 && this.gameFocus != this.FOCUS_TUTORIAL){
 		setLevel(level3);
 		currentLevel.save();
 	}
