@@ -28,6 +28,10 @@ level1.afterStart = function(){
 		}
 		b.push(a);
 	}
+    
+    //Forest generation: Takes one random number for position of forest, Takes second random number to represent the number of trees in the forest; Implementation will not allow two trees to be in the same position 
+ 
+     
 	
 	this.map.setPosition(-1280, -1280);
 	this.map.parseMap(b);
@@ -39,6 +43,12 @@ level1.afterStart = function(){
 	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
 	this.addGameObject(tree1);
 
+    var tree2 = new Tree(-1216,-1216,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
+    
+    var tree3 = new Tree(1216,1216,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
+    this.addGameObject(tree2);
+    this.addGameObject(tree3);
+    
 	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
 	this.addGameObject(redberry);
     

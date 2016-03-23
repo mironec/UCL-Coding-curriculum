@@ -149,7 +149,7 @@ level4.afterUpdate = function(delta){
 
 	if(this.done == 12 && this.gameFocus != this.FOCUS_TUTORIAL)
 	{
-		this.showTutorial("Moving on, after telling the Bobable NumberOfBobCoins = 500;, you can later write NumberOfBobCoins = 100; like this: \n\n<c>function(){ var NumberOfBobCoins = 500; NumberOfBobCoins = 100; bob().say(\"I have \" + NumberOfBobCoins + \" Bobcoins\")}\n\n Try use the Bobunction BobsWallet now with the changes, you will see that Bob has now got 100 Bobcoins instead. Poor Bob. \n", true);
+		this.showTutorial("Moving on, after telling the Bobable NumberOfBobCoins = 500;, you can later write NumberOfBobCoins = 100; like this: \n\n<c>function(){ var NumberOfBobCoins = 500;\n<c> NumberOfBobCoins = 100;\n<c> bob().say(\"I have \" + NumberOfBobCoins + \" Bobcoins\")}\n\n Try use the Bobunction BobsWallet now with the changes, you will see that Bob has now got 100 Bobcoins instead. Poor Bob. \n", true);
 		this.gameFocus = this.FOCUS_SPELLBOOK;
 		this.done = 13;
 	}
@@ -188,27 +188,10 @@ level4.afterUpdate = function(delta){
 		
 		this.done = 18;
 	}
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-	
+       if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
+            setLevel(level5);
+            currentLevel.save();
+        }
 
 	
 }
