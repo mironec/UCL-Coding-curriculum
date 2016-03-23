@@ -6,6 +6,7 @@ function GameObject(x,y){
 	this.height = 0;
 	this.image = null;
 	this.imageReady = false;
+	this.passable = true;
 }
 
 GameObject.prototype.draw = function(ctx){
@@ -131,6 +132,7 @@ function ItemPile(x,y,parentLevel,items){
 	this.height = 64;
 	this.items = items;
 	this.parentLevel = parentLevel;
+	this.passable = true;
 }
 
 ItemPile.prototype = Object.create(GameObject.prototype);
@@ -198,6 +200,7 @@ function Tree(x,y,aliveImage,deadImage){
 	this.imageReady = true;
 	this.alive = true;
 	this.health = 20;
+	this.passable = false;
 }
 
 Tree.prototype = Object.create(GameObject.prototype);
@@ -242,6 +245,7 @@ function BuildingSite(x, y, buildType){
     this.width = 128;
     this.height = 128;
     this.image = buildType.buildStages[0].image;
+    this.passable = false;
     if(this.image !== undefined) this.imageReady = true;
 }
 
@@ -334,6 +338,7 @@ function FarmingPatch(x,y,plantType){
 	this.width = plantType.width || 64;
 	this.height = plantType.height || 64;
 	this.image = plantType.growthStages[0].image;
+	this.passable = true;
 	if(this.image !== undefined) this.imageReady = true;
 }
 
@@ -457,6 +462,7 @@ function Character(name,x,y,parentLevel){
 	this.sayText = "";
 	this.sayTime = 0;
 	this.inventory = [];
+	this.passable = true;
 }
 
 Character.prototype = Object.create(GameObject.prototype);
@@ -532,53 +538,63 @@ Character.prototype.update = function(delta){
 	
 	if(this.orders.length == 0) return;
 	else{
+		var oldOrder = null;
 		var curOrder = this.orders[0];
 		
-		switch(curOrder.getName()){
-			case "moveRelative":
-				curOrder.getData().x += this.x;
-				curOrder.getData().y += this.y;
-				curOrder.setName("move");
-			case "move":
-				var moveX = curOrder.getData().x;
-				var moveY = curOrder.getData().y;
-				var desireX = moveX - this.x;
-				var desireY = moveY - this.y;
-				
-				var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-				if(desireDist == 0) {this.completeCurrentOrder(); return;}
-				var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
-				
-				this.x += realDist/desireDist * desireX;
-				this.y += realDist/desireDist * desireY;
+		while(curOrder!=oldOrder){
+			oldOrder = curOrder;
+			switch(curOrder.getName()){
+				case "moveRelative":
+					curOrder.getData().x += this.x;
+					curOrder.getData().y += this.y;
+					curOrder.setName("move");
+				case "move":
+					var moveX = curOrder.getData().x;
+					var moveY = curOrder.getData().y;
+					var desireX = moveX - this.x;
+					var desireY = moveY - this.y;
+					
+					var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
+					if(desireDist == 0) {this.completeCurrentOrder(); return;}
+					var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
+					
+					this.x += realDist/desireDist * desireX;
+					this.y += realDist/desireDist * desireY;
+					delta = 0;
 
-				var m = this.parentLevel.map; var b = false;
-				if(this.x + this.width > m.getPixelWidth() + m.beginX)   {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
-				if(this.x < m.beginX)                                    {this.x = m.beginX; b = true;}
-				if(this.y + this.height > m.getPixelHeight() + m.beginY) {this.y = m.getPixelHeight() + m.beginY - this.height; b = true;}
-				if(this.y < m.beginY)                                    {this.y = m.beginY; b = true;}
-				if(b) { this.completeCurrentOrder(); return; }
-				break;
-			case "chop":
-				var tTree = curOrder.getData().tree;
-				var response = tTree.chop(delta);
-				this.addToInventory(response.items);
-				if(response.remove !== undefined && response.remove) this.completeCurrentOrder();
-				break;
-			case "harvest":
-				var gO = this.parentLevel.gameObjects;
+					var m = this.parentLevel.map; var b = false;
+					if(this.x + this.width > m.getPixelWidth() + m.beginX)   {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
+					if(this.x < m.beginX)                                    {this.x = m.beginX; b = true;}
+					if(this.y + this.height > m.getPixelHeight() + m.beginY) {this.y = m.getPixelHeight() + m.beginY - this.height; b = true;}
+					if(this.y < m.beginY)                                    {this.y = m.beginY; b = true;}
+					if(b) { this.completeCurrentOrder(); return; }
+					break;
+				case "chop":
+					var tTree = curOrder.getData().tree;
+					var response = tTree.chop(delta);
+					delta=0;
+					this.addToInventory(response.items);
+					if(response.remove !== undefined && response.remove) this.completeCurrentOrder();
+					break;
+				case "harvest":
+					var gO = this.parentLevel.gameObjects;
 
-				for(var i = 0;i < gO.length;i++){
-					if(gO[i] instanceof FarmingPatch && BoundingBoxClip(this, gO[i])){
-						this.addToInventory( gO[i].harvest() );
+					for(var i = 0;i < gO.length;i++){
+						if(gO[i] instanceof FarmingPatch && BoundingBoxClip(this, gO[i])){
+							this.addToInventory( gO[i].harvest() );
+						}
 					}
-				}
-				this.completeCurrentOrder();
-				break;
-			case "drop":
-				this.drop(curOrder);
-				this.completeCurrentOrder();
-				break;
+					this.completeCurrentOrder();
+					break;
+				case "drop":
+					this.drop(curOrder);
+					this.completeCurrentOrder();
+					break;
+				case "pickUp":
+					this.pickUp(curOrder);
+					this.completeCurrentOrder();
+			}
+			curOrder=this.orders.length>0?this.orders[0]:curOrder;
 		}
 	}
 }
@@ -632,6 +648,44 @@ Character.prototype.drop = function(obj, numberToDrop){
 		}
 		return;
 	}
+}
+
+Character.prototype.pickUp = function(obj, numberToPickup){
+	if(!(obj instanceof Order)){
+		this.orders.push(new Order("pickUp",{obj: obj, numberToPickup: numberToPickup}));
+		return;
+	}
+	else{numberToPickup = obj.getData().numberToPickup; obj = obj.getData().obj;}
+	if(obj === undefined){
+		var a = this.parentLevel.getIntersectingObjects(this.x, this.y, this.width, this.height);
+		for(var i=0;i<a.length;i++){
+			if(a[i] instanceof ItemPile){
+				this.addToInventory(a[i].items);
+				a[i].items=[];
+			}
+		}
+	}
+	/*if(typeof obj == 'number') {
+		if(this.inventory[obj] === undefined) return;
+		if(this.inventory[obj].handleDrop(this, numberToDrop)) this.inventory.splice(obj,1);
+		return;
+	}
+	if(obj instanceof Item) {
+		for(var i = 0; i < this.inventory.length;i++){
+			if(this.inventory[i] == obj) {
+				if(this.inventory[i].handleDrop(this, numberToDrop)) this.inventory.splice(i,1);
+			}
+		}
+		return;
+	}
+	if(typeof obj == 'string' || typeof obj == 'String'){
+		for(var i = 0; i < this.inventory.length;i++){
+			if(this.inventory[i].getName() == obj) {
+				if(this.inventory[i].handleDrop(this, numberToDrop)) this.inventory.splice(i,1);
+			}
+		}
+		return;
+	}*/
 }
 
 Character.prototype.completeCurrentOrder = function(){
@@ -735,9 +789,9 @@ ItemType.prototype.handleDrop = function(item, character, numberToDrop){
 	var gO = character.parentLevel.gameObjects;
 
 	for(var i = 0;i < gO.length;i++){
-		if(!(gO[i] instanceof Character) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: 62, height: 62}, gO[i])){
+		if( (gO[i] instanceof ItemPile || !gO[i].passable) && BoundingBoxClip({x: character.x+1, y: character.y+1, width: 62, height: 62}, gO[i])){
 			if(gO[i] instanceof ItemPile){
-				gO[i].addItems([new Item(item.itemType).setQuantity(numberToDrop)]);
+				gO[i].addItems(new Item(item.itemType).setQuantity(numberToDrop));
 				item.quantity -= numberToDrop;
 				if(item.quantity <= 0) return true;
 
@@ -789,7 +843,7 @@ ItemType.RedberrySeeds = new ItemType("RedberrySeeds").setName("Redberry seeds")
 		var gO = owner.parentLevel.gameObjects;
 
 		for(var i = 0;i < gO.length;i++){
-			if(!(gO[i] instanceof Character) && !(gO[i] == owner) && BoundingBoxClip({x: owner.x+1, y: owner.y+1, width: PlantType.Redberry.width-2, height: PlantType.Redberry.height-2}, gO[i])){
+			if( (!gO[i].passable || gO[i] instanceof FarmingPatch) && gO[i] != owner && BoundingBoxClip({x: owner.x+1, y: owner.y+1, width: PlantType.Redberry.width-2, height: PlantType.Redberry.height-2}, gO[i])){
 				return {};
 			}
 		}
@@ -878,6 +932,10 @@ CharacterList.prototype.harvest = function(callback){
 CharacterList.prototype.drop = function(obj,numberToDrop,callback){
 	var f = ((numberToDrop !== undefined) ? function(){this.drop(obj,numberToDrop);} : function(){this.drop(obj);});
 	return this.forEach(f);
+}
+
+CharacterList.prototype.pickUp = function(obj,numberToDrop,callback){
+	return this.forEach(function(){this.pickUp(obj,numberToDrop,callback);});
 }
 
 CharacterList.prototype.say = function(s, t){

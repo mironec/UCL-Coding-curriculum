@@ -173,7 +173,7 @@ Level.prototype.onKeyPress = function(e){
 		if(this.gameFocus == this.FOCUS_GAME) {this.gameFocus=this.FOCUS_SCRIPT_BAR; this.scriptBar = ""; this.scriptPointer=0;}
 		else if(this.gameFocus == this.FOCUS_SCRIPT_BAR) {
 			this.gameFocus=this.FOCUS_GAME;
-			this.executeScipt(this.scriptBar);
+			this.executeScript(this.scriptBar);
 		}
 		else if(this.gameFocus == this.FOCUS_TUTORIAL) {
 			this.gameFocus = this.FOCUS_GAME;
@@ -204,7 +204,7 @@ Level.prototype.fixFunction = function(i){
 	
 }
 
-Level.prototype.executeScipt = function(script){
+Level.prototype.executeScript = function(script){
 	var ok = false;
 	for(var i=0;i<this.allowedFunctions.length;i++){
 		if(script.startsWith(this.allowedFunctions[i].getName())) ok=true;
@@ -217,8 +217,15 @@ Level.prototype.executeScipt = function(script){
 			script = script.replace(new RegExp(this.spellbook.tabs[i].name+"\\(","g"), "currentLevel.spellbook.functions["+i+"].apply(currentLevel,");
 		}
 
-		var greatFunc = new Function(script);
-		greatFunc.apply();
+		try{
+			var greatFunc = new Function(script);
+			greatFunc.apply();
+		}
+		catch(err){
+			this.scriptBar = err.name + ": " + err.message;
+			this.scriptPointer = this.scriptBar.length;
+			this.gameFocus = this.FOCUS_SCRIPT_BAR;
+		}
 	}
 }
 
@@ -412,6 +419,19 @@ Level.prototype.getNearestTreeTo = function(character){
 	}
 	
 	return closestTree;
+}
+
+Level.prototype.getIntersectingObjects = function(x, y, width, height){
+	var gO = this.gameObjects;
+	var a = [];
+
+	for(var i = 0;i < gO.length;i++){
+		if( BoundingBoxClip({x: x, y: y, width: width, height: height}, gO[i]) ){
+			a.push(gO[i]);
+		}
+	}
+
+	return a;
 }
 
 Level.prototype.savingFunc = function(key, value){
