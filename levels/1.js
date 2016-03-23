@@ -29,10 +29,33 @@ level1.afterStart = function(){
 		b.push(a);
 	}
     
-    //Forest generation: Takes one random number for position of forest, Takes second random number to represent the number of trees in the forest; Implementation will not allow two trees to be in the same position 
- 
-     
-	
+    //Forest generation: Takes one random number for position of Trees.
+
+    var numOfTrees = 50;
+    var forestTrees = new Array(); 
+    //top half for loop;
+    
+    for (var counter = 0; counter< numOfTrees; counter++){
+        var Rand = Math.random();
+        //Generate random x position 
+        var xPos = ((Math.floor(Rand*-40))*64) + 640;
+        Rand = Math.random();
+        var yPos = ((Math.floor(Rand*-40))*64) + 640;
+        //create a new tree
+        forestTrees[counter] = new Tree(xPos, yPos,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
+        this.addGameObject(forestTrees[counter]);
+    }
+    for (var counter = numOfTrees; counter< (numOfTrees*2); counter++){
+        var Rand = Math.random();
+        //Generate random x position 
+        var xPos = ((Math.floor(Rand*40))*64) - 640;
+        Rand = Math.random();
+        var yPos = ((Math.floor(Rand*40))*64) - 640;
+        //create a new tree
+        forestTrees[counter] = new Tree(xPos, yPos,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
+        this.addGameObject(forestTrees[counter]);
+    }
+    
 	this.map.setPosition(-1280, -1280);
 	this.map.parseMap(b);
 	
