@@ -192,8 +192,8 @@ ItemPile.prototype.addItems = function(obj){
 function Tree(x,y,aliveImage,deadImage){
 	GameObject.call(this,x,y);
 	
-	this.width = 40;
-	this.height = 100;
+	this.width = Tree.width;
+	this.height = Tree.height;
 	this.aliveImage = aliveImage;
 	this.deadImage = deadImage;
 	this.image = this.aliveImage;
@@ -205,6 +205,9 @@ function Tree(x,y,aliveImage,deadImage){
 
 Tree.prototype = Object.create(GameObject.prototype);
 Tree.prototype.constructor = Tree;
+
+Tree.width = 40;
+Tree.height = 100;
 
 Tree.prototype.draw = function(ctx){
 	ctx.save();
@@ -484,7 +487,7 @@ Character.prototype.movePixels = function(rx,ry, callback){
 }
 
 Character.prototype.chopTree = function(tree){
-	this.orders.push(new Order("move",{x: tree.x, y: tree.y}));
+	this.orders.push(new Order("move",{x: tree.x, y: tree.y, range:64}));
 	this.orders.push(new Order("chop",{tree: tree}));
 }
 
@@ -551,11 +554,12 @@ Character.prototype.update = function(delta){
 				case "move":
 					var moveX = curOrder.getData().x;
 					var moveY = curOrder.getData().y;
+					var range = curOrder.getData().range || 0;
 					var desireX = moveX - this.x;
 					var desireY = moveY - this.y;
 					
 					var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-					if(desireDist == 0) {this.completeCurrentOrder(); return;}
+					if(desireDist <= range) {this.completeCurrentOrder(); return;}
 					var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
 					
 					var oldx = this.x; var oldy = this.y;

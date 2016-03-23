@@ -28,49 +28,61 @@ level1.afterStart = function(){
 		}
 		b.push(a);
 	}
+
+	this.map.setPosition(-1280, -1280);
+	this.map.parseMap(b);
     
     //Forest generation: Takes one random number for position of Trees.
 
-    var numOfTrees = 50;
-    var forestTrees = new Array(); 
-    //top half for loop;
+    var totalTrees = 100;
     
-    for (var counter = 0; counter< numOfTrees; counter++){
-        var Rand = Math.random();
+    for (var counter = 0; counter< totalTrees;){
+    	pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
+    	var numTrees = Math.floor(pseudoRand*4)+2;
+
+		pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
         //Generate random x position 
-        var xPos = ((Math.floor(Rand*-40))*64) + 640;
-        Rand = Math.random();
-        var yPos = ((Math.floor(Rand*-40))*64) + 640;
-        //create a new tree
-        forestTrees[counter] = new Tree(xPos, yPos,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
-        this.addGameObject(forestTrees[counter]);
+        var xPos = Math.floor(pseudoRand*31)*64 - 1024;
+        pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
+        var yPos = Math.floor(pseudoRand*31)*64 - 1024;
+
+    	for(var i=0;i<numTrees;i++,counter++){
+    		pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
+	        //Generate random x position 
+	        var xPosDelta = Math.floor(pseudoRand*7)*64 - 160;
+	        pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
+	        var yPosDelta = Math.floor(pseudoRand*7)*64 - 160;
+
+	        var x = xPos + xPosDelta;
+	        var y = yPos + yPosDelta;
+
+	        if(BoundingBoxClip(x,y,Tree.width,Tree.height,-320,-320,640,640)){
+	        	i--; counter--; continue;
+	    	}
+
+	    	var a = this.getIntersectingObjects(x,y,Tree.width,Tree.height);
+	    	if(a.length > 0){
+	    		i--; counter--; continue;
+	    	}
+
+	        //create a new tree
+	        var tree = new Tree(x, y, this.imageRepository.getImage('tree1'), this.imageRepository.getImage('stump1'));
+	        this.addGameObject(tree);
+    	}
     }
-    for (var counter = numOfTrees; counter< (numOfTrees*2); counter++){
-        var Rand = Math.random();
-        //Generate random x position 
-        var xPos = ((Math.floor(Rand*40))*64) - 640;
-        Rand = Math.random();
-        var yPos = ((Math.floor(Rand*40))*64) - 640;
-        //create a new tree
-        forestTrees[counter] = new Tree(xPos, yPos,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
-        this.addGameObject(forestTrees[counter]);
-    }
-    
-	this.map.setPosition(-1280, -1280);
-	this.map.parseMap(b);
 	
 	var bob = new Character("Bob",0,0,this);
 	bob.getImageFromRepo('bob',this.imageRepository);
 	this.addCharacter(bob);
 	
-	var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
+	/*var tree1 = new Tree(300,0,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
 	this.addGameObject(tree1);
 
     var tree2 = new Tree(-1216,-1216,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
     
     var tree3 = new Tree(1216,1216,this.imageRepository.getImage('tree1'),this.imageRepository.getImage('stump1'));
     this.addGameObject(tree2);
-    this.addGameObject(tree3);
+    this.addGameObject(tree3);*/
     
 	var redberry = new FarmingPatch(-128,-64,PlantType.Redberry);
 	this.addGameObject(redberry);
