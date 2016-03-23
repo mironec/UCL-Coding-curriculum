@@ -121,6 +121,11 @@ if(this.done == 1 && this.gameFocus == this.FOCUS_SPELLBOOK ){
 		this.done = 10;
 	}
 
-
+    if(this.done == 10 && this.gameFocus != this.FOCUS_TUTORIAL)
+	{
+		setLevel(level4);
+		currentLevel.save();
+	}
+    
 	
 }
