@@ -109,11 +109,18 @@ if(this.done == 12 && this.gameFocus != this.FOCUS_TUTORIAL){
 
 		this.done = 13;
 	}
-	
+
 if(this.done == 13 && this.gameFocus != this.FOCUS_TUTORIAL){
-		this.showTutorial("Well done The Great Bob, you've done splendidly and words will not contain enough gratitude towards the great deeds you will do in the future.\n\n  I bid you Godspeed as Bob the Narrator and Good luck against The Evil Bob...The battle has only just begun\n", false);
+		this.showTutorial("Lets try out what we have learnt.\n\n Create a new function in the spellbook:\n\n function bobsOpinions(){var word = \"BOB\";\nif(word  == \"BOB\")\n{bob().say(\"Good Word!\")}\nelse{bob().say(\"Bad Word!\")}}\n\n Click done and try the function!!", true);
+		this.gameFocus = this.FOCUS_SPELLBOOK;
 
 		this.done = 14;
+	}
+	
+if(this.done == 14 && this.gameFocus != this.FOCUS_SPELLBOOK && bob.sayTime>0){
+		this.showTutorial("Well done The Great Bob, you've done splendidly and words will not contain enough gratitude towards the great deeds you will do in the future.\n\n  I bid you Godspeed as Bob the Narrator and Good luck against The Evil Bob...The battle has only just begun\n", false);
+
+		this.done = 15;
 	}
 
 	
