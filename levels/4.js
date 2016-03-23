@@ -7,8 +7,21 @@ level4.afterStart = function(){
 	for(i=0;i<40;i++){
 		var a = [];
 		for(j=0;j<40;j++){
-			pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
-			a.push({type: "grass", variation: Math.floor(pseudoRand*2 + 1) });
+				pseudoRand = ('0.'+Math.sin(pseudoRand).toString().substr(6));
+            var rndgen = Math.floor(pseudoRand*60 + 1);
+            if(rndgen < 52){
+                a.push({type: "grass", variation: 6});
+            }else if((rndgen > 51) && (rndgen < 55)){
+                a.push({type: "grass", variation: 3});
+            }else if((rndgen > 54) && (rndgen < 58)){
+                a.push({type: "grass", variation: 2});
+            }else if((rndgen > 57) && (rndgen < 59)){
+                a.push({type: "grass", variation: 1});
+            }else if((rndgen > 58) && (rndgen < 60)){
+                a.push({type: "grass", variation: 5});
+            }else if((rndgen > 59) && (rndgen < 61)){
+                a.push({type: "grass", variation: 4});
+            }
 		}
 		b.push(a);
 	}
