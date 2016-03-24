@@ -573,6 +573,8 @@ Character.prototype.update = function(delta){
 						}
 					}
 
+					this.x-oldx;
+
 					this.y += realDist/desireDist * desireY;
 					var a = this.parentLevel.getIntersectingObjectsStrict(this);
 					for(var i=0;i<a.length;i++){
@@ -584,7 +586,7 @@ Character.prototype.update = function(delta){
 
 					delta = 0;
 
-					if(this.x == oldx && this.y == oldy) {this.completeCurrentOrder(); return;}
+					if(Math.sqrt(Math.pow(this.x-oldx,2) + Math.pow(this.y-oldy)) < realDist/20) {this.completeCurrentOrder(); return;}
 
 					var m = this.parentLevel.map; var b = false;
 					if(this.x + this.width > m.getPixelWidth() + m.beginX)   {this.x = m.getPixelWidth() + m.beginX - this.width; b = true;}
@@ -617,6 +619,9 @@ Character.prototype.update = function(delta){
 				case "pickUp":
 					this.pickUp(curOrder);
 					this.completeCurrentOrder();
+				case "wait":
+					curOrder.getData().time -= delta;
+					if(curOrder.getData().time <= 0){ delta=-curOrder.getData().time; this.completeCurrentOrder(); }
 			}
 			curOrder=this.orders.length>0?this.orders[0]:curOrder;
 		}
@@ -714,6 +719,10 @@ Character.prototype.pickUp = function(obj, numberToPickup){
 
 Character.prototype.stop = function(){
 	this.orders = [];
+}
+
+Character.prototype.wait = function(time){
+	this.orders.push(new Order("wait",{time:time}));
 }
 
 Character.prototype.completeCurrentOrder = function(){
@@ -972,6 +981,10 @@ CharacterList.prototype.say = function(s, t){
 
 CharacterList.prototype.stop = function(args){
 	this.forEach(function(){this.stop(args);});
+}
+
+CharacterList.prototype.wait = function(args){
+	this.forEach(function(){this.wait(args);});
 }
 
 CharacterList.prototype.draw = function(ctx){
