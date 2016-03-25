@@ -209,14 +209,6 @@ Tree.prototype.constructor = Tree;
 Tree.width = 40;
 Tree.height = 100;
 
-Tree.prototype.draw = function(ctx){
-	ctx.save();
-	ctx.translate(this.x-this.width/2,this.y-this.height/4);
-	if(this.imageReady)
-		ctx.drawImage(this.image,0,0);
-	ctx.restore();
-}
-
 Tree.prototype.chop = function(delta){
 	this.health -= delta/1000;
 	if(this.health <= 0) {
@@ -233,6 +225,7 @@ Tree.prototype.chop = function(delta){
 Tree.prototype.fall = function(){
 	this.alive = false;
 	this.image = this.deadImage;
+	this.passable = true;
 }
 
 Tree.prototype.isAlive = function(){
@@ -487,7 +480,7 @@ Character.prototype.movePixels = function(rx,ry, callback){
 }
 
 Character.prototype.chopTree = function(tree){
-	this.orders.push(new Order("move",{x: tree.x, y: tree.y, range:64}));
+	this.orders.push(new Order("move",{obj: tree, x: tree.x, y: tree.y, range:5}));
 	this.orders.push(new Order("chop",{tree: tree}));
 }
 
@@ -555,11 +548,22 @@ Character.prototype.update = function(delta){
 					var moveX = curOrder.getData().x;
 					var moveY = curOrder.getData().y;
 					var range = curOrder.getData().range || 0;
+					var obj = curOrder.getData().obj;
+					if(obj !== undefined){
+						moveX = obj.x+obj.width/2;
+						moveY = obj.y+obj.height/2;
+					}
+					
 					var desireX = moveX - this.x;
 					var desireY = moveY - this.y;
 					
 					var desireDist = Math.sqrt(desireX*desireX + desireY*desireY);
-					if(desireDist <= range) {this.completeCurrentOrder(); return;}
+					if(obj !== undefined) {
+						if(BoundingBoxDistance(this, obj) <= range) {this.completeCurrentOrder(); return;}
+					}
+					else{
+						if(desireDist <= range) {this.completeCurrentOrder(); return;}
+					}
 					var realDist = Math.min(delta * this.moveSpeed/1000, desireDist);
 					
 					var oldx = this.x; var oldy = this.y;
@@ -573,16 +577,20 @@ Character.prototype.update = function(delta){
 						}
 					}
 
-					this.x-oldx;
+					/*desireX = (this.x-oldx)*desireDist/realDist;
+					desireDist = Math.sqrt(desireX*desireX + desireY*desireY);*/
 
 					this.y += realDist/desireDist * desireY;
 					var a = this.parentLevel.getIntersectingObjectsStrict(this);
 					for(var i=0;i<a.length;i++){
 						if(!a[i].passable){
 							if(desireY>0){ this.y = Math.min(this.y,a[i].y-this.height); }
-							else{ this.y = Math.min(this.y,a[i].y+a[i].height); }
+							else{ this.y = Math.max(this.y,a[i].y+a[i].height); }
 						}
 					}
+
+					/*desireY = (this.y-oldy)/realDist*desireDist;
+					desireDist = Math.sqrt(desireX*desireX + desireY*desireY);*/
 
 					delta = 0;
 
@@ -985,12 +993,6 @@ CharacterList.prototype.stop = function(args){
 
 CharacterList.prototype.wait = function(args){
 	this.forEach(function(){this.wait(args);});
-}
-
-CharacterList.prototype.draw = function(ctx){
-	for(var i=0;i<this.arr.length;i++){
-		this.arr[i].draw(ctx);
-	}
 }
 
 CharacterList.prototype.add = function(character){
