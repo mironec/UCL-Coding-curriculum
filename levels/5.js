@@ -191,7 +191,7 @@ if(this.done == 1 && this.gameFocus != this.FOCUS_TUTORIAL){
 		this.showTutorial("Good thing there is a refresh button. That will allow me to send you back 15 seconds before you ruined everything. You best avoid doing something like this. ", false);
 		this.done = 23;
 	}
-     if(this.done == 22 && this.gameFocus != this.FOCUS_TUTORIAL)
+     if(this.done == 23 && this.gameFocus != this.FOCUS_TUTORIAL)
 	{
 		setLevel(level6);
 		currentLevel.save();
