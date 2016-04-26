@@ -106,12 +106,23 @@ function init(){
 }
 
 function postLoad(){
-	if(localStorage.getItem("uncleBob.savedLevel") !== undefined && localStorage.getItem("uncleBob.savedLevel") !== "" &&
-	   localStorage.getItem("uncleBob.savedGameObjects") !== undefined && localStorage.getItem("uncleBob.savedGameObjects") !== "" &&
-	   localStorage.getItem("uncleBob.savedSpellbookTabs") !== undefined && localStorage.getItem("uncleBob.savedSpellbookTabs") !== "" &&
-	   localStorage.getItem("uncleBob.savedLevelName") !== undefined && localStorage.getItem("uncleBob.savedLevelName") !== "") {
+	var validSave = function validSave(str){
+		if(typeof str === "string" || typeof str === "String")
+			var s = localStorage.getItem(str)
+			return s !== undefined && s !== "" && s !== null;
+		if(str instanceof Array){
+			for(var i=0;i<str.length;i++){
+				if(!validSave(str[i])) return false;
+			}
+			return true;
+		}
+	}
+	if(validSave(["uncleBob.savedLevel","uncleBob.savedGameObjects","uncleBob.savedSpellbookTabs","uncleBob.savedLevelName"])) {
 	   	setLevel(localStorage.getItem("uncleBob.savedLevelName"));
-	   	currentLevel.load();
+	   	if(currentLevel !== undefined && currentLevel !== null)
+	   		currentLevel.load();
+	   	else
+	   		setLevel(level1); //Corrupted save
 	}
 	else{
 		setLevel(level1);
