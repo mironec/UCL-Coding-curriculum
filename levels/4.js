@@ -188,7 +188,7 @@ level4.afterUpdate = function(delta){
 		
 		this.done = 18;
 	}
-       if(this.done == 6 && this.gameFocus != this.FOCUS_TUTORIAL){
+       if(this.done == 18 && this.gameFocus != this.FOCUS_TUTORIAL){
             setLevel(level5);
             currentLevel.save();
         }
